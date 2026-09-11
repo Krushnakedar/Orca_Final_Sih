@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Layers,
-  MapPin,
-  Maximize2,
-  RefreshCw,
-  Compass,
-  Radio,
-  Sliders,
-  ShieldAlert,
-  Info
-} from 'lucide-react';
-import MarineMap from '../features/map/MarineMap';
-import GeofenceMonitor from '../features/geofence/GeofenceMonitor';
-import { mapService } from '../services/mapService';
+import React, { useState, useEffect } from "react";
+import { MapPin, RefreshCw } from "lucide-react";
+import MarineMap from "../features/map/MarineMap";
+import GeofenceMonitor from "../features/geofence/GeofenceMonitor";
+import { mapService } from "../services/mapService";
 
 export default function MapPage() {
-  const [selectedSector, setSelectedSector] = useState('Mumbai Coast');
+  const [selectedSector, setSelectedSector] = useState("Mumbai Coast");
   const [layersData, setLayersData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +17,7 @@ export default function MapPage() {
         setLayersData(res.data);
       }
     } catch (err) {
-      console.error('Error fetching marine map layers:', err);
+      console.error("Error fetching marine map layers:", err);
     } finally {
       setLoading(false);
     }
@@ -46,29 +36,55 @@ export default function MapPage() {
             <h1 className="text-2xl font-bold text-white tracking-tight">
               Marine GIS & Geofencing Command Center
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-medium">
-              Phase 10 Geofencing Active
-            </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Multi-layer oceanographic cartography, Marine Protected Areas (MPAs), naval firing perimeters, and IMBL boundary monitoring
+            Multi-layer oceanographic cartography, Marine Protected Areas
+            (MPAs), naval firing perimeters, and IMBL boundary monitoring
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs text-slate-300">
-            <MapPin className="w-3.5 h-3.5 text-ocean-400 shrink-0" />
-            <span className="text-slate-400">Sector:</span>
+            <MapPin
+              className="w-3.5 h-3.5 text-ocean-400 shrink-0"
+              aria-hidden="true"
+            />
+            <label htmlFor="map-sector" className="text-slate-400">
+              Sector:
+            </label>
             <select
+              id="map-sector"
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
               className="bg-transparent font-semibold text-slate-100 focus:outline-none cursor-pointer"
             >
-              <option value="Mumbai Coast" className="bg-slate-900 text-slate-100">Arabian Sea / Mumbai Coast</option>
-              <option value="Kochi Harbor" className="bg-slate-900 text-slate-100">Arabian Sea / Kochi Harbor</option>
-              <option value="Chennai Offshore" className="bg-slate-900 text-slate-100">Bay of Bengal / Chennai Coast</option>
-              <option value="Visakhapatnam" className="bg-slate-900 text-slate-100">Bay of Bengal / Visakhapatnam</option>
-              <option value="Porbandar" className="bg-slate-900 text-slate-100">Gujarat / Porbandar & Kutch</option>
+              <option
+                value="Mumbai Coast"
+                className="bg-slate-900 text-slate-100"
+              >
+                Arabian Sea / Mumbai Coast
+              </option>
+              <option
+                value="Kochi Harbor"
+                className="bg-slate-900 text-slate-100"
+              >
+                Arabian Sea / Kochi Harbor
+              </option>
+              <option
+                value="Chennai Offshore"
+                className="bg-slate-900 text-slate-100"
+              >
+                Bay of Bengal / Chennai Coast
+              </option>
+              <option
+                value="Visakhapatnam"
+                className="bg-slate-900 text-slate-100"
+              >
+                Bay of Bengal / Visakhapatnam
+              </option>
+              <option value="Porbandar" className="bg-slate-900 text-slate-100">
+                Gujarat / Porbandar & Kutch
+              </option>
             </select>
           </div>
 
@@ -76,15 +92,17 @@ export default function MapPage() {
             onClick={fetchLayers}
             className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 transition"
             title="Reload GIS Layers"
+            aria-label="Reload GIS layers"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-ocean-400 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 text-ocean-400 ${loading ? "animate-spin" : ""}`}
+            />
           </button>
         </div>
       </div>
 
       {/* Main Grid: GIS Map (8 Cols) + Geofencing Monitor (4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 8 Cols: Full Feature GIS Map */}
         <div className="lg:col-span-8 space-y-4">
           <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-2xl bg-slate-950">
             <MarineMap
@@ -127,7 +145,6 @@ export default function MapPage() {
           </div>
         </div>
 
-        {/* Right 4 Cols: Geofencing & Boundary Monitor */}
         <div className="lg:col-span-4 space-y-4">
           <GeofenceMonitor />
         </div>

@@ -68,12 +68,12 @@ export default function HomePage({ apiStatus }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-bold text-slate-200">Phase 1 Foundation Status</h3>
+            <h3 className="font-bold text-slate-200">System Status</h3>
           </div>
           <span className="text-xs font-mono text-slate-400">GET /api/health</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
             <span className="text-xs text-slate-500 font-medium">Backend Health</span>
             <p className="text-sm font-semibold text-slate-200 mt-1">
@@ -82,17 +82,9 @@ export default function HomePage({ apiStatus }) {
           </div>
           <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
             <span className="text-xs text-slate-500 font-medium">API Response</span>
-            <p className="text-sm font-mono text-ocean-400 mt-1 truncate">
+            <p className="text-sm font-mono text-ocean-400 mt-1 truncate" title={apiStatus.data?.message}>
               {apiStatus.data?.message || (apiStatus.connected ? 'ORCA API is running' : 'Waiting...')}
             </p>
-          </div>
-          <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-            <span className="text-xs text-slate-500 font-medium">Active Phase</span>
-            <p className="text-sm font-semibold text-slate-200 mt-1">Phase 1 (Setup)</p>
-          </div>
-          <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-            <span className="text-xs text-slate-500 font-medium">Next Milestone</span>
-            <p className="text-sm font-semibold text-slate-200 mt-1">Phase 2 (Auth + Dashboard)</p>
           </div>
         </div>
       </div>

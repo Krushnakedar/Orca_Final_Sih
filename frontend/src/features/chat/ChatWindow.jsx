@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Send,
   Bot,
@@ -18,61 +18,63 @@ import {
   Volume2,
   VolumeX,
   MessageSquare,
-  Scale
-} from 'lucide-react';
-import { chatService } from '../../services/chatService';
-import AgentTraceViewer from './AgentTraceViewer';
-import EvidenceDrawer from '../explainability/EvidenceDrawer';
-import LoadingSpinner from '../../components/LoadingSpinner';
-import { useLanguage } from '../../context/LanguageContext';
+  Scale,
+} from "lucide-react";
+import { chatService } from "../../services/chatService";
+import AgentTraceViewer from "./AgentTraceViewer";
+import EvidenceDrawer from "../explainability/EvidenceDrawer";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { useLanguage } from "../../context/LanguageContext";
 
 const SECTORS = [
-  { name: 'Mumbai Coast', lat: 18.9220, lon: 72.8347 },
-  { name: 'Kochi Harbor', lat: 9.9312, lon: 76.2673 },
-  { name: 'Chennai Offshore', lat: 13.0827, lon: 80.2707 },
-  { name: 'Visakhapatnam', lat: 17.6868, lon: 83.2185 },
-  { name: 'Porbandar', lat: 21.6417, lon: 69.6293 }
+  { name: "Mumbai Coast", lat: 18.922, lon: 72.8347 },
+  { name: "Kochi Harbor", lat: 9.9312, lon: 76.2673 },
+  { name: "Chennai Offshore", lat: 13.0827, lon: 80.2707 },
+  { name: "Visakhapatnam", lat: 17.6868, lon: 83.2185 },
+  { name: "Porbandar", lat: 21.6417, lon: 69.6293 },
 ];
 
 export default function ChatWindow() {
   const { language, t, speakText, stopSpeaking, isSpeaking } = useLanguage();
   const [messages, setMessages] = useState([]);
-  const [inputPrompt, setInputPrompt] = useState('');
+  const [inputPrompt, setInputPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [selectedSector, setSelectedSector] = useState(SECTORS[0]);
-  const [conversationId, setConversationId] = useState(() => `conv_${Date.now()}`);
+  const [conversationId, setConversationId] = useState(
+    () => `conv_${Date.now()}`,
+  );
   const messagesEndRef = useRef(null);
 
   const getLocalizedSuggestions = () => {
-    if (language === 'hi') {
+    if (language === "hi") {
       return [
         "क्या कल सुबह मुंबई के पास मछली पकड़ने जाना सुरक्षित है?",
         "निकटतम संभावित मछली पकड़ने का क्षेत्र (PFZ) कहाँ है?",
         "वर्तमान समुद्री मौसम और लहरों की स्थिति बताएं।",
-        "कोच्चि बंदरगाह पर समुद्र की स्थिति कैसी है?"
+        "कोच्चि बंदरगाह पर समुद्र की स्थिति कैसी है?",
       ];
     }
-    if (language === 'mr') {
+    if (language === "mr") {
       return [
         "उद्या सकाळी मुंबईजवळ मासेमारी करणे सुरक्षित आहे का?",
         "जवळचे संभाव्य मासेमारी क्षेत्र (PFZ) कुठे आहे?",
         "सध्याच्या हवामानाचा व लाटांचा अंदाज काय आहे?",
-        "कोची बंदरावर समुद्राची स्थिती कशी आहे?"
+        "कोची बंदरावर समुद्राची स्थिती कशी आहे?",
       ];
     }
     return [
       "Is it safe to go fishing tomorrow morning near Mumbai?",
       "Where is the nearest potentially favourable fishing zone?",
       "Explain the current marine weather advisory.",
-      "What are the wave conditions at Kochi Harbor?"
+      "What are the wave conditions at Kochi Harbor?",
     ];
   };
 
   const suggestions = getLocalizedSuggestions();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -80,8 +82,13 @@ export default function ChatWindow() {
   }, [messages, loading]);
 
   const handleVoiceInput = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Voice speech recognition is not supported on this browser. Please use Chrome or Edge.');
+    if (
+      !("webkitSpeechRecognition" in window) &&
+      !("SpeechRecognition" in window)
+    ) {
+      alert(
+        "Voice speech recognition is not supported on this browser. Please use Chrome or Edge.",
+      );
       return;
     }
 
@@ -90,15 +97,16 @@ export default function ChatWindow() {
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
-    if (language === 'hi') recognition.lang = 'hi-IN';
-    else if (language === 'mr') recognition.lang = 'mr-IN';
-    else if (language === 'ta') recognition.lang = 'ta-IN';
-    else if (language === 'ml') recognition.lang = 'ml-IN';
-    else if (language === 'gu') recognition.lang = 'gu-IN';
-    else recognition.lang = 'en-IN';
+    if (language === "hi") recognition.lang = "hi-IN";
+    else if (language === "mr") recognition.lang = "mr-IN";
+    else if (language === "ta") recognition.lang = "ta-IN";
+    else if (language === "ml") recognition.lang = "ml-IN";
+    else if (language === "gu") recognition.lang = "gu-IN";
+    else recognition.lang = "en-IN";
 
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
@@ -120,12 +128,12 @@ export default function ChatWindow() {
     const text = queryText.trim();
     if (!text || loading) return;
 
-    setInputPrompt('');
+    setInputPrompt("");
     const userMsg = {
       id: `msg_u_${Date.now()}`,
-      sender: 'user',
+      sender: "user",
       text,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -134,9 +142,13 @@ export default function ChatWindow() {
     try {
       const res = await chatService.sendMessage(
         text,
-        { sectorName: selectedSector.name, lat: selectedSector.lat, lon: selectedSector.lon },
+        {
+          sectorName: selectedSector.name,
+          lat: selectedSector.lat,
+          lon: selectedSector.lon,
+        },
         conversationId,
-        language
+        language,
       );
 
       if (res.aiResponse) {
@@ -145,10 +157,10 @@ export default function ChatWindow() {
     } catch (err) {
       const errorMsg = {
         id: `msg_err_${Date.now()}`,
-        sender: 'ai',
-        text: `**Query Processing Notice:** Could not complete the marine intelligence query. (${err.message || 'Network error'})`,
-        intent: 'ERROR',
-        timestamp: new Date().toISOString()
+        sender: "ai",
+        text: `**Query Processing Notice:** Could not complete the marine intelligence query. (${err.message || "Network error"})`,
+        intent: "ERROR",
+        timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
@@ -166,7 +178,7 @@ export default function ChatWindow() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -182,28 +194,38 @@ export default function ChatWindow() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-white text-sm">{t('aiAssistant', 'ORCA Marine Intelligence Assistant')}</h2>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-ocean-950 border border-ocean-800 text-ocean-300">
-                Phase 13 Multilingual
-              </span>
+              <h2 className="font-bold text-white text-sm">
+                {t("aiAssistant", "ORCA Marine Intelligence Assistant")}
+              </h2>
             </div>
-            <p className="text-[11px] text-slate-400">English • हिन्दी • मराठी • தமிழ் • മലയാളം • ગુજરાતી</p>
+            <p className="text-[11px] text-slate-400">
+              English • हिन्दी • मराठी • தமிழ் • മലയാളം • ગુજરાતી
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300">
             <MapPin className="w-3.5 h-3.5 text-ocean-400" />
+            <label htmlFor="chat-sector" className="sr-only">
+              Select sector
+            </label>
             <select
+              id="chat-sector"
               value={selectedSector.name}
               onChange={(e) => {
-                const sec = SECTORS.find((s) => s.name === e.target.value) || SECTORS[0];
+                const sec =
+                  SECTORS.find((s) => s.name === e.target.value) || SECTORS[0];
                 setSelectedSector(sec);
               }}
               className="bg-transparent text-slate-100 font-semibold focus:outline-none cursor-pointer text-xs"
             >
               {SECTORS.map((s) => (
-                <option key={s.name} value={s.name} className="bg-slate-900 text-slate-100">
+                <option
+                  key={s.name}
+                  value={s.name}
+                  className="bg-slate-900 text-slate-100"
+                >
                   {s.name}
                 </option>
               ))}
@@ -214,6 +236,7 @@ export default function ChatWindow() {
             onClick={handleResetChat}
             className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 transition"
             title="Reset Conversation"
+            aria-label="Reset conversation"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -228,15 +251,20 @@ export default function ChatWindow() {
               <Bot className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-slate-100">{t('aiAssistant', 'Conversational Marine Safety Assistant')}</h3>
+              <h3 className="text-base font-bold text-slate-100">
+                {t("aiAssistant", "Conversational Marine Safety Assistant")}
+              </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                {t('askAiPlaceholder', 'Ask operational questions regarding fishing voyage safety, PFZ locations, weather alerts, or lower-risk routing.')}
+                {t(
+                  "askAiPlaceholder",
+                  "Ask operational questions regarding fishing voyage safety, PFZ locations, weather alerts, or lower-risk routing.",
+                )}
               </p>
             </div>
 
             <div className="w-full space-y-2 pt-2">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                {t('suggestedPrompts', 'Suggested Operational Prompts')}:
+                {t("suggestedPrompts", "Suggested Operational Prompts")}:
               </span>
               <div className="space-y-1.5 text-left">
                 {suggestions.map((sug, idx) => (
@@ -256,9 +284,9 @@ export default function ChatWindow() {
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-3 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
             >
-              {msg.sender === 'ai' && (
+              {msg.sender === "ai" && (
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-ocean-500 to-tealAccent-500 flex items-center justify-center text-slate-950 shrink-0 shadow-md mt-1">
                   <Bot className="w-4 h-4 stroke-[2.5]" />
                 </div>
@@ -266,49 +294,94 @@ export default function ChatWindow() {
 
               <div
                 className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 text-xs leading-relaxed space-y-2 shadow-lg ${
-                  msg.sender === 'user'
-                    ? 'bg-ocean-600 text-white rounded-tr-none'
-                    : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none'
+                  msg.sender === "user"
+                    ? "bg-ocean-600 text-white rounded-tr-none"
+                    : "bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none"
                 }`}
               >
-                {msg.sender === 'user' ? (
+                {msg.sender === "user" ? (
                   <p className="whitespace-pre-wrap font-medium">{msg.text}</p>
                 ) : (
                   <div>
                     {/* Voice Read Aloud Speaker Button for Artisanal Fishermen */}
                     <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 mb-2">
                       <span className="text-[10px] font-mono text-slate-400">
-                        Language: <strong>{(msg.language || language).toUpperCase()}</strong>
+                        Language:{" "}
+                        <strong>
+                          {(msg.language || language).toUpperCase()}
+                        </strong>
                       </span>
                       <button
-                        onClick={() => isSpeaking ? stopSpeaking() : speakText(msg.text, msg.language || language)}
+                        onClick={() =>
+                          isSpeaking
+                            ? stopSpeaking()
+                            : speakText(msg.text, msg.language || language)
+                        }
                         className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-tealAccent-300 text-[10px] font-semibold flex items-center gap-1 transition"
+                        aria-label={
+                          isSpeaking
+                            ? "Stop voice playback"
+                            : "Read response aloud"
+                        }
                       >
-                        {isSpeaking ? <VolumeX className="w-3 h-3 text-rose-400" /> : <Volume2 className="w-3 h-3 text-tealAccent-400" />}
-                        <span>{isSpeaking ? t('stopReading', 'Stop Voice') : t('readAloud', 'Read Aloud')}</span>
+                        {isSpeaking ? (
+                          <VolumeX className="w-3 h-3 text-rose-400" />
+                        ) : (
+                          <Volume2 className="w-3 h-3 text-tealAccent-400" />
+                        )}
+                        <span>
+                          {isSpeaking
+                            ? t("stopReading", "Stop Voice")
+                            : t("readAloud", "Read Aloud")}
+                        </span>
                       </button>
                     </div>
 
                     {/* Rich Markdown Output Render */}
                     <div className="prose prose-invert prose-xs max-w-none space-y-2.5 font-sans">
-                      {msg.text.split('\n\n').map((para, pIdx) => {
-                        if (para.startsWith('### ')) {
-                          return <h3 key={pIdx} className="text-sm font-bold text-white">{para.replace('### ', '')}</h3>;
-                        }
-                        if (para.startsWith('#### ')) {
-                          return <h4 key={pIdx} className="text-xs font-bold text-tealAccent-400 mt-2">{para.replace('#### ', '')}</h4>;
-                        }
-                        if (para.startsWith('> ')) {
+                      {msg.text.split("\n\n").map((para, pIdx) => {
+                        if (para.startsWith("### ")) {
                           return (
-                            <blockquote key={pIdx} className="p-2.5 rounded-lg bg-slate-950 border-l-2 border-ocean-500 text-[11px] text-slate-400 italic">
-                              {para.replace('> ', '')}
+                            <h3
+                              key={pIdx}
+                              className="text-sm font-bold text-white"
+                            >
+                              {para.replace("### ", "")}
+                            </h3>
+                          );
+                        }
+                        if (para.startsWith("#### ")) {
+                          return (
+                            <h4
+                              key={pIdx}
+                              className="text-xs font-bold text-tealAccent-400 mt-2"
+                            >
+                              {para.replace("#### ", "")}
+                            </h4>
+                          );
+                        }
+                        if (para.startsWith("> ")) {
+                          return (
+                            <blockquote
+                              key={pIdx}
+                              className="p-2.5 rounded-lg bg-slate-950 border-l-2 border-ocean-500 text-[11px] text-slate-400 italic"
+                            >
+                              {para.replace("> ", "")}
                             </blockquote>
                           );
                         }
                         return (
-                          <div key={pIdx} className="text-slate-300 leading-relaxed">
-                            {para.split('\n').map((line, lIdx) => (
-                              <div key={lIdx} className={line.startsWith('- ') ? 'pl-2 py-0.5' : ''}>
+                          <div
+                            key={pIdx}
+                            className="text-slate-300 leading-relaxed"
+                          >
+                            {para.split("\n").map((line, lIdx) => (
+                              <div
+                                key={lIdx}
+                                className={
+                                  line.startsWith("- ") ? "pl-2 py-0.5" : ""
+                                }
+                              >
                                 {line}
                               </div>
                             ))}
@@ -317,12 +390,14 @@ export default function ChatWindow() {
                       })}
                     </div>
 
-                    {/* Evidence & Explainability Drawer (Phase 9) */}
+                    {/* Evidence & Explainability Drawer */}
                     {msg.explainabilityPackage && (
-                      <EvidenceDrawer explainabilityPackage={msg.explainabilityPackage} />
+                      <EvidenceDrawer
+                        explainabilityPackage={msg.explainabilityPackage}
+                      />
                     )}
 
-                    {/* Agent Thought & Execution Trace Component (Phase 7) */}
+                    {/* Agent Thought & Execution Trace Component */}
                     {msg.trace && (
                       <AgentTraceViewer
                         trace={msg.trace}
@@ -335,11 +410,14 @@ export default function ChatWindow() {
                 )}
 
                 <div className="text-[10px] text-right opacity-60 font-mono pt-1">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </div>
               </div>
 
-              {msg.sender === 'user' && (
+              {msg.sender === "user" && (
                 <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 shadow-md mt-1">
                   <User className="w-4 h-4" />
                 </div>
@@ -356,7 +434,10 @@ export default function ChatWindow() {
             <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center gap-3">
               <LoadingSpinner size="sm" />
               <div className="text-xs text-slate-300">
-                <span className="font-semibold text-ocean-400">Agentic Orchestrator Active:</span> Analyzing marine conditions in {language.toUpperCase()}...
+                <span className="font-semibold text-ocean-400">
+                  Analyzing marine conditions
+                </span>{" "}
+                in {language.toUpperCase()}...
               </div>
             </div>
           </div>
@@ -368,7 +449,9 @@ export default function ChatWindow() {
       {/* Suggested Chips Bar */}
       {messages.length > 0 && (
         <div className="px-4 py-2 bg-slate-900/40 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto text-[11px]">
-          <span className="text-slate-500 font-semibold shrink-0">{t('suggestedPrompts', 'Suggestions')}:</span>
+          <span className="text-slate-500 font-semibold shrink-0">
+            {t("suggestedPrompts", "Suggestions")}:
+          </span>
           {suggestions.slice(0, 3).map((sug, idx) => (
             <button
               key={idx}
@@ -396,11 +479,18 @@ export default function ChatWindow() {
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isListening ? t('voiceListening', 'Listening...') : t('askAiPlaceholder', `Ask about ${selectedSector.name}...`)}
+              placeholder={
+                isListening
+                  ? t("voiceListening", "Listening...")
+                  : t("askAiPlaceholder", `Ask about ${selectedSector.name}...`)
+              }
               className={`w-full pl-4 pr-12 py-3 bg-slate-950 border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none transition ${
-                isListening ? 'border-rose-500 ring-2 ring-rose-500/40 animate-pulse' : 'border-slate-800 focus:border-ocean-500'
+                isListening
+                  ? "border-rose-500 ring-2 ring-rose-500/40 animate-pulse"
+                  : "border-slate-800 focus:border-ocean-500"
               }`}
               disabled={loading}
+              aria-label="Ask the marine assistant"
             />
 
             {/* Voice Mic Button */}
@@ -408,11 +498,20 @@ export default function ChatWindow() {
               type="button"
               onClick={handleVoiceInput}
               className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition ${
-                isListening ? 'bg-rose-600 text-white animate-bounce' : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-cyan-400'
+                isListening
+                  ? "bg-rose-600 text-white animate-bounce"
+                  : "bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-cyan-400"
               }`}
               title="Voice Input (Speech-to-Text)"
+              aria-label={
+                isListening ? "Stop voice input" : "Start voice input"
+              }
             >
-              {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              {isListening ? (
+                <MicOff className="w-3.5 h-3.5" />
+              ) : (
+                <Mic className="w-3.5 h-3.5" />
+              )}
             </button>
           </div>
 
@@ -428,7 +527,12 @@ export default function ChatWindow() {
 
         <div className="mt-2 text-center text-[10px] text-slate-500 flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3 h-3 text-tealAccent-400" />
-          <span>{t('disclaimer', 'Decision Support Only • Verified Evidence • Zero Hallucination')}</span>
+          <span>
+            {t(
+              "disclaimer",
+              "Decision Support Only • Verified Evidence • Zero Hallucination",
+            )}
+          </span>
         </div>
       </div>
     </div>

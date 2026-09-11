@@ -1,29 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  Waves,
-  User,
-  LogOut,
-  LogIn,
-  Bell,
-  Activity,
-  Menu,
-  ShieldCheck,
-  Radio
-} from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { alertService } from '../services/alertService';
-import LanguageSwitcher from '../components/LanguageSwitcher';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Waves, User, LogOut, LogIn, Bell } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { alertService } from "../services/alertService";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function Header({ apiStatus }) {
   const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(3);
 
   useEffect(() => {
     const fetchUnread = async () => {
       try {
-        const res = await alertService.getAlerts({ status: 'ACTIVE' });
+        const res = await alertService.getAlerts({ status: "ACTIVE" });
         if (res?.data) {
           setUnreadCount(res.data.length);
         }
@@ -44,19 +33,22 @@ export default function Header({ apiStatus }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-lg tracking-wider text-white">ORCA</span>
+              <span className="font-black text-lg tracking-wider text-white">
+                ORCA
+              </span>
               <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-ocean-950 border border-ocean-800 text-tealAccent-400 font-bold">
                 SIH 2026
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 leading-none">Agentic Marine Intelligence Platform</p>
+            <p className="text-[10px] text-slate-400 leading-none">
+              Agentic Marine Intelligence Platform
+            </p>
           </div>
         </Link>
       </div>
 
       {/* Right Controls: Language Switcher, Alerts Bell, Backend State & Operator Auth */}
       <div className="flex items-center gap-2.5 sm:gap-3">
-        {/* Phase 13 Language Switcher */}
         <LanguageSwitcher />
 
         {/* Active Emergency Alerts Bell Link */}
@@ -64,6 +56,7 @@ export default function Header({ apiStatus }) {
           to="/alerts"
           className="relative p-2 rounded-xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition"
           title="View Safety Alerts"
+          aria-label={`View safety alerts${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
         >
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
@@ -77,11 +70,13 @@ export default function Header({ apiStatus }) {
         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
           <span
             className={`w-2 h-2 rounded-full ${
-              apiStatus?.connected ? 'bg-tealAccent-400 animate-pulse' : 'bg-rose-500'
+              apiStatus?.connected
+                ? "bg-tealAccent-400 animate-pulse"
+                : "bg-rose-500"
             }`}
           />
           <span className="text-slate-400 text-[11px] font-mono">
-            {apiStatus?.connected ? 'Live Multi-Agent Grid' : 'Connecting...'}
+            {apiStatus?.connected ? "Live Multi-Agent Grid" : "Connecting..."}
           </span>
         </div>
 
@@ -93,12 +88,15 @@ export default function Header({ apiStatus }) {
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-200 transition"
             >
               <User className="w-3.5 h-3.5 text-ocean-400" />
-              <span className="font-semibold">{user?.name?.split(' ')[0] || 'Operator'}</span>
+              <span className="font-semibold">
+                {user?.name?.split(" ")[0] || "Operator"}
+              </span>
             </Link>
             <button
               onClick={logout}
               className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-400 transition"
               title="Sign Out"
+              aria-label="Sign out"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>

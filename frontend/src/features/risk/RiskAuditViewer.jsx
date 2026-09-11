@@ -1,19 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ShieldAlert,
   ShieldCheck,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Sliders,
   CheckCircle2,
-  Anchor,
-  Wind,
-  Waves,
-  Eye,
-  Zap,
-  Info
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function RiskAuditViewer({ riskAssessment }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,37 +15,37 @@ export default function RiskAuditViewer({ riskAssessment }) {
 
   const {
     riskScore = 24,
-    riskLevel = 'LOW',
+    riskLevel = "LOW",
     confidenceScore = 94,
     isOverride = false,
     overrideReason = null,
     vesselProfile = {},
     primaryFactors = [],
     triggeredRules = [],
-    safetyDirectives = []
+    safetyDirectives = [],
   } = riskAssessment;
 
   const levelColors = {
     LOW: {
-      badge: 'bg-emerald-950 border-emerald-800 text-emerald-300',
-      text: 'text-emerald-400',
-      bar: 'bg-emerald-500'
+      badge: "bg-emerald-950 border-emerald-800 text-emerald-300",
+      text: "text-emerald-400",
+      bar: "bg-emerald-500",
     },
     MODERATE: {
-      badge: 'bg-amber-950 border-amber-800 text-amber-300',
-      text: 'text-amber-400',
-      bar: 'bg-amber-500'
+      badge: "bg-amber-950 border-amber-800 text-amber-300",
+      text: "text-amber-400",
+      bar: "bg-amber-500",
     },
     HIGH: {
-      badge: 'bg-rose-950 border-rose-800 text-rose-300',
-      text: 'text-rose-400',
-      bar: 'bg-rose-500'
+      badge: "bg-rose-950 border-rose-800 text-rose-300",
+      text: "text-rose-400",
+      bar: "bg-rose-500",
     },
     CRITICAL: {
-      badge: 'bg-red-950 border-red-700 text-red-200 animate-pulse',
-      text: 'text-red-400',
-      bar: 'bg-red-600'
-    }
+      badge: "bg-red-950 border-red-700 text-red-200 animate-pulse",
+      text: "text-red-400",
+      bar: "bg-red-600",
+    },
   };
 
   const style = levelColors[riskLevel] || levelColors.LOW;
@@ -63,7 +56,7 @@ export default function RiskAuditViewer({ riskAssessment }) {
       <div className="p-4 bg-slate-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-xl border ${style.badge}`}>
-            {riskLevel === 'CRITICAL' || riskLevel === 'HIGH' ? (
+            {riskLevel === "CRITICAL" || riskLevel === "HIGH" ? (
               <ShieldAlert className="w-5 h-5" />
             ) : (
               <ShieldCheck className="w-5 h-5" />
@@ -71,29 +64,44 @@ export default function RiskAuditViewer({ riskAssessment }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-100 text-sm">Deterministic Risk Engine</span>
-              <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border font-bold ${style.badge}`}>
+              <span className="font-bold text-slate-100 text-sm">
+                Deterministic Risk Engine
+              </span>
+              <span
+                className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border font-bold ${style.badge}`}
+              >
                 {riskLevel} RISK
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Pure rule-based threshold evaluation &bull; Zero LLM hallucination</p>
+            <p className="text-[11px] text-slate-400">
+              Pure rule-based threshold evaluation &bull; Zero LLM hallucination
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className={`text-xl font-black ${style.text}`}>
-              {riskScore} <span className="text-xs font-normal text-slate-400">/ 100</span>
+              {riskScore}{" "}
+              <span className="text-xs font-normal text-slate-400">/ 100</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-500">Confidence: {confidenceScore}%</div>
+            <div className="text-[10px] font-mono text-slate-500">
+              Confidence: {confidenceScore}%
+            </div>
           </div>
 
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
             title="Inspect Triggered Rules"
+            aria-label={isOpen ? "Collapse rule audit" : "Expand rule audit"}
+            aria-expanded={isOpen}
           >
-            {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {isOpen ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
@@ -102,7 +110,9 @@ export default function RiskAuditViewer({ riskAssessment }) {
       {isOverride && (
         <div className="p-3 bg-rose-950/80 border-b border-rose-800 text-rose-200 text-xs flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span><strong>Critical Safety Override Active:</strong> {overrideReason}</span>
+          <span>
+            <strong>Critical Safety Override Active:</strong> {overrideReason}
+          </span>
         </div>
       )}
 
@@ -129,7 +139,8 @@ export default function RiskAuditViewer({ riskAssessment }) {
           {/* Triggered Rules Table */}
           <div className="space-y-2">
             <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider block">
-              Triggered Boundary Rules Audit Trail ({triggeredRules.length} Rules):
+              Triggered Boundary Rules Audit Trail ({triggeredRules.length}{" "}
+              Rules):
             </span>
 
             <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/40">
@@ -160,12 +171,17 @@ export default function RiskAuditViewer({ riskAssessment }) {
                         {rule.weight}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full border ${
-                          rule.severity === 'CRITICAL' ? 'bg-red-950 border-red-800 text-red-300' :
-                          rule.severity === 'HIGH' ? 'bg-rose-950 border-rose-800 text-rose-300' :
-                          rule.severity === 'MODERATE' ? 'bg-amber-950 border-amber-800 text-amber-300' :
-                          'bg-emerald-950 border-emerald-800 text-emerald-300'
-                        }`}>
+                        <span
+                          className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full border ${
+                            rule.severity === "CRITICAL"
+                              ? "bg-red-950 border-red-800 text-red-300"
+                              : rule.severity === "HIGH"
+                                ? "bg-rose-950 border-rose-800 text-rose-300"
+                                : rule.severity === "MODERATE"
+                                  ? "bg-amber-950 border-amber-800 text-amber-300"
+                                  : "bg-emerald-950 border-emerald-800 text-emerald-300"
+                          }`}
+                        >
                           {rule.severity}
                         </span>
                       </td>
@@ -196,8 +212,15 @@ export default function RiskAuditViewer({ riskAssessment }) {
 
           {/* Golden Rule Footer */}
           <div className="pt-2 border-t border-slate-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px] text-slate-500">
-            <span>Evaluated on: {new Date(riskAssessment.evaluatedAt || Date.now()).toLocaleTimeString()}</span>
-            <span className="font-mono text-tealAccent-400">WMO-522 &bull; INCOIS-OSF Standard Compliance</span>
+            <span>
+              Evaluated on:{" "}
+              {new Date(
+                riskAssessment.evaluatedAt || Date.now(),
+              ).toLocaleTimeString()}
+            </span>
+            <span className="font-mono text-tealAccent-400">
+              WMO-522 &bull; INCOIS-OSF Standard Compliance
+            </span>
           </div>
         </div>
       )}
