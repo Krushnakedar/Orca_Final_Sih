@@ -10,13 +10,12 @@ const OfflineContext = createContext(null);
 
 export function OfflineProvider({ children }) {
   const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
   );
   const [lastOfflineHit, setLastOfflineHit] = useState(null);
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [swRegistration, setSwRegistration] = useState(null);
 
-  // --- online / offline browser events -------------------------------
   useEffect(() => {
     const goOnline = () => setIsOnline(true);
     const goOffline = () => setIsOnline(false);
@@ -28,19 +27,16 @@ export function OfflineProvider({ children }) {
     };
   }, []);
 
-  // --- listen for cached-data hits from the axios interceptor --------
   useEffect(() => {
     const onHit = (e) => setLastOfflineHit(e.detail);
     window.addEventListener('orca:offline-hit', onHit);
     return () => window.removeEventListener('orca:offline-hit', onHit);
   }, []);
 
-  // Clear the stale marker once we are back online.
   useEffect(() => {
     if (isOnline) setLastOfflineHit(null);
   }, [isOnline]);
 
-  // --- SW update prompt -----------------------------------------------
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
       return;
@@ -87,9 +83,7 @@ export function OfflineProvider({ children }) {
   };
 
   return (
-    <OfflineContext.Provider value={value}>
-      {children}
-    </OfflineContext.Provider>
+    <OfflineContext.Provider value={value}>{children}</OfflineContext.Provider>
   );
 }
 

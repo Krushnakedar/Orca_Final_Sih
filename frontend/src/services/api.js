@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { isCacheable, putCached, getCached } from './offlineCache';
+import { matchPolicy } from '../offline/syncPolicy';
+import { enqueue } from '../offline/outbox';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -17,19 +19,50 @@ function emitOfflineHit(detail) {
   }
 }
 
+// ── OFFLINE MUTATION QUEUE ──────────────────────────────────────────────
+// If we're offline AND the mutation endpoint is listed in syncPolicy.js,
+// enqueue the request and synthesize the success response the caller
+// expects. Everything else falls through to the normal error handler.
+api.interceptors.request.use(async (config) => {
+  if (typeof navigator !== 'undefined' && navigator.onLine) return config;
+  if (config._isSyncReplay) return config;
+
+  const method = (config.method || 'get').toLowerCase();
+  if (method === 'get') return config;
+
+  const policy = matchPolicy(method, config.url);
+  if (!policy) return config;
+
+  let parsedBody = null;
+  try {
+    parsedBody = config.data ? JSON.parse(config.data) : null;
+  } catch {
+    parsedBody = config.data || null;
+  }
+
+  const action = await enqueue({
+    method,
+    url: config.url,
+    body: parsedBody,
+    headers: { ...(config.headers || {}) },
+  });
+
+  const synthesized = policy.synthesize(action.body);
+  config.adapter = async () => ({
+    data: synthesized,
+    status: 200,
+    statusText: 'OK (queued offline)',
+    headers: {},
+    config,
+    request: {},
+  });
+  return config;
+});
+
 api.interceptors.response.use(
   async (response) => {
     // SUCCESS PATH — unchanged shape. Just opportunistically cache
     // whitelisted GETs so we have data if the network later drops.
-    //
-    // NOTE: we intentionally do NOT skip caching when the Authorization
-    // header is present. AuthContext sets it globally, so this would
-    // prevent caching for every logged-in user. Safety is enforced
-    // elsewhere:
-    //   1. isCacheable() refuses /auth/* and /health unconditionally.
-    //   2. The service worker's cacheWillUpdate guard refuses to store
-    //      authenticated responses in Cache Storage.
-    //   3. IndexedDB only stores the endpoints in the CACHEABLE allowlist.
     try {
       const cfg = response.config || {};
       const method = (cfg.method || 'get').toLowerCase();
@@ -61,8 +94,6 @@ api.interceptors.response.use(
             cachedAt: cached.cachedAt,
             isStale: cached.isStale,
           });
-          // Return the payload exactly as the server would have.
-          // Offline state lives in OfflineContext, not here.
           return cached.data;
         }
       } catch {
@@ -80,7 +111,7 @@ api.interceptors.response.use(
       offline: isNetworkFailure,
     };
     return Promise.reject(customError);
-  }
+  },
 );
 
 export default api;

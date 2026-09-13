@@ -3,6 +3,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import OfflineBanner from '../components/OfflineBanner';
 import BackOnlineToast from '../components/BackOnlineToast';
+import SyncFailurePanel from '../components/SyncFailurePanel';
 
 export default function MainLayout({ children, apiStatus }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -11,6 +12,9 @@ export default function MainLayout({ children, apiStatus }) {
     <div className="min-h-screen bg-slate-950 flex flex-col">
       <Header apiStatus={apiStatus} onMenuClick={() => setIsMobileNavOpen(true)} />
       <OfflineBanner />
+      <div className="px-4 sm:px-6 lg:px-8 pt-2 max-w-7xl w-full mx-auto">
+        <SyncFailurePanel />
+      </div>
       <div className="flex flex-1 md:overflow-hidden">
         <Sidebar isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-950 w-full min-w-0">
