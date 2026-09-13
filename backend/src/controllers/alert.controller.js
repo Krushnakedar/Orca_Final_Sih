@@ -1,9 +1,9 @@
 const AlertService = require('../services/alert.service');
 
-const getAlerts = (req, res, next) => {
+const getAlerts = async (req, res, next) => {
   try {
-    const { sector, severity, status } = req.query;
-    const alerts = AlertService.getAlerts({ sector, severity, status });
+    const { sector, severity, status, feedType } = req.query;
+    const alerts = await AlertService.getAlerts({ sector, severity, status, feedType });
 
     return res.status(200).json({
       success: true,

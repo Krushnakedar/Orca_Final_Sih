@@ -31,7 +31,12 @@ export default function RoutePlanner({
   onRouteGenerated,
   currentPlan,
   showDirectBaseline = false,
-  onToggleDirectBaseline
+  onToggleDirectBaseline,
+  customOrigin = null,
+  customDestination = null,
+  selectionMode = null,
+  onSelectionModeChange,
+  onClearCustomPoint
 }) {
   const { remember } = usePendingActions();
 
@@ -129,8 +134,8 @@ export default function RoutePlanner({
     setError(null);
     try {
       const res = await routeService.planRoute(
-        isUsingLiveLocation ? null : selectedOrigin,
-        selectedDestination,
+        isUsingLiveLocation ? null : (customOrigin ? { ...customOrigin, isCustom: true } : selectedOrigin),
+        customDestination || selectedDestination,
         {
           typeKey: vesselType,
           name: vesselType === 'small_motorized'
@@ -162,7 +167,7 @@ export default function RoutePlanner({
   useEffect(() => {
     handlePlanRoute();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrigin, selectedDestination, isUsingLiveLocation, liveLocation]);
+  }, [selectedOrigin, selectedDestination, customOrigin, customDestination, isUsingLiveLocation, liveLocation, vesselType, cruisingSpeed]);
 
   // Quick Apply Pre-determined Corridor Template
   const handleApplyTemplate = (tpl) => {
@@ -248,6 +253,7 @@ export default function RoutePlanner({
               <span>Departure Port / Harbor:</span>
             </label>
             <select
+              disabled={Boolean(customOrigin)}
               value={selectedOrigin}
               onChange={(e) => setSelectedOrigin(e.target.value)}
               className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-medium focus:outline-none focus:border-cyan-500 transition"
@@ -258,6 +264,31 @@ export default function RoutePlanner({
                 </option>
               ))}
             </select>
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <span className="text-[10px] text-slate-500">Or choose any offshore point on the map.</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectionModeChange?.('origin')}
+                  className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${selectionMode === 'origin' ? 'border-emerald-400 bg-emerald-950 text-emerald-200' : 'border-slate-700 bg-slate-950 text-emerald-300 hover:border-emerald-500'}`}
+                >
+                  <MapPin className="w-3 h-3 inline mr-1" />
+                  {selectionMode === 'origin' ? 'Picking start...' : customOrigin ? 'Pick another start' : 'Pick start on map'}
+                </button>
+                {customOrigin && (
+                  <button
+                    type="button"
+                    onClick={() => onClearCustomPoint?.('origin')}
+                    className="text-[10px] text-rose-300 hover:text-rose-200 font-semibold"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            {customOrigin && (
+              <div className="text-[10px] text-emerald-300 font-mono">Custom start: {customOrigin.lat.toFixed(4)}°N, {customOrigin.lon.toFixed(4)}°E</div>
+            )}
           </div>
         ) : (
           <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-2 text-slate-300">
@@ -276,6 +307,7 @@ export default function RoutePlanner({
             <span>Destination Fishing Ground / PFZ:</span>
           </label>
           <select
+            disabled={Boolean(customDestination)}
             value={selectedDestination}
             onChange={(e) => setSelectedDestination(e.target.value)}
             className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-medium focus:outline-none focus:border-cyan-500 transition"
@@ -290,6 +322,31 @@ export default function RoutePlanner({
               </option>
             ))}
           </select>
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <span className="text-[10px] text-slate-500">Or choose any offshore destination.</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onSelectionModeChange?.('destination')}
+                className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${selectionMode === 'destination' ? 'border-cyan-400 bg-cyan-950 text-cyan-200' : 'border-slate-700 bg-slate-950 text-cyan-300 hover:border-cyan-500'}`}
+              >
+                <MapPin className="w-3 h-3 inline mr-1" />
+                {selectionMode === 'destination' ? 'Picking end...' : customDestination ? 'Pick another end' : 'Pick end on map'}
+              </button>
+              {customDestination && (
+                <button
+                  type="button"
+                  onClick={() => onClearCustomPoint?.('destination')}
+                  className="text-[10px] text-rose-300 hover:text-rose-200 font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+          {customDestination && (
+            <div className="text-[10px] text-cyan-300 font-mono">Custom end: {customDestination.lat.toFixed(4)}°N, {customDestination.lon.toFixed(4)}°E</div>
+          )}
         </div>
 
         {/* Predetermined Route Quick-Picks */}
@@ -346,14 +403,10 @@ export default function RoutePlanner({
           </div>
         </div>
 
-        <button
-          onClick={handlePlanRoute}
-          disabled={loading}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-ocean-600 hover:from-cyan-500 hover:to-ocean-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-cyan-950/50 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? <LoadingSpinner size="sm" /> : <Navigation className="w-4 h-4" />}
-          <span>{loading ? 'Evaluating Parameters...' : 'Calculate Safe Trajectory'}</span>
-        </button>
+        <div className="flex items-center justify-center gap-2 py-2 text-[10px] text-slate-500 border-t border-slate-800">
+          {loading ? <LoadingSpinner size="sm" /> : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+          <span>{loading ? 'Updating route for current settings...' : 'Route updates automatically as settings change'}</span>
+        </div>
 
         {/* Offline / error feedback */}
         {error && (

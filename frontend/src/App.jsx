@@ -19,6 +19,7 @@ import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { OfflineProvider } from './context/OfflineContext';
 import { PendingActionProvider } from './context/PendingActionContext';
+import { SyncProvider } from './context/SyncContext';
 import { checkHealth } from './services/healthService';
 
 export default function App() {
@@ -69,33 +70,35 @@ export default function App() {
       <OfflineProvider>
         <PendingActionProvider>
           <AuthProvider>
-            <LanguageProvider>
-              <BrowserRouter>
-                <MainLayout apiStatus={apiStatus}>
-                  <Routes>
-                    <Route path="/" element={<HomePage apiStatus={apiStatus} />} />
-                    <Route path="/chat" element={<ChatPage />} />
-                    <Route path="/map" element={<MapPage />} />
-                    <Route path="/routes" element={<RoutesPage />} />
-                    <Route path="/alerts" element={<AlertsPage />} />
-                    <Route path="/pfz" element={<PFZPage />} />
-                    <Route path="/history" element={<HistoryPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/dashboard" element={<DashboardPage apiStatus={apiStatus} />} />
-                    <Route
-                      path="/profile"
-                      element={
-                        <ProtectedRoute>
-                          <ProfilePage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </MainLayout>
-              </BrowserRouter>
-            </LanguageProvider>
+            <SyncProvider>
+              <LanguageProvider>
+                <BrowserRouter>
+                  <MainLayout apiStatus={apiStatus}>
+                    <Routes>
+                      <Route path="/" element={<HomePage apiStatus={apiStatus} />} />
+                      <Route path="/chat" element={<ChatPage />} />
+                      <Route path="/map" element={<MapPage />} />
+                      <Route path="/routes" element={<RoutesPage />} />
+                      <Route path="/alerts" element={<AlertsPage />} />
+                      <Route path="/pfz" element={<PFZPage />} />
+                      <Route path="/history" element={<HistoryPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/dashboard" element={<DashboardPage apiStatus={apiStatus} />} />
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <ProfilePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                  </MainLayout>
+                </BrowserRouter>
+              </LanguageProvider>
+            </SyncProvider>
           </AuthProvider>
         </PendingActionProvider>
       </OfflineProvider>

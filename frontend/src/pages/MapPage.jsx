@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ExternalLink, MapPin } from 'lucide-react';
+import { TileLayer } from 'react-leaflet';
 import WeatherSafety from '../features/map/WeatherSafety';
 import MarineMap from '../features/map/MarineMap';
 import { providerService } from '../services/providerService';
@@ -52,6 +53,7 @@ export default function MapPage() {
 
   return (
     <div className="marine-map-page space-y-6">
+      <style>{`.marine-map-page .map-tiles-charcoal { filter: brightness(0.58) contrast(1.12) saturate(0.3); }`}</style>
       <div className="marine-map-header flex flex-col justify-between gap-4 pb-3 border-b border-slate-800">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -91,7 +93,20 @@ export default function MapPage() {
       <div className="marine-map-grid grid gap-6">
         <div className="min-w-0 space-y-4">
           <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-2xl bg-slate-950">
-            <MarineMap layersData={mapLayers} onPointSelect={setPoint} safety={reading} selectedSector={selectedSector} showDemoLayers={false} visibleLayers={['pfz']} showOfficialLayers height="clamp(420px, 68vh, 680px)" />
+            <MarineMap layersData={mapLayers} onPointSelect={setPoint} safety={reading} selectedSector={selectedSector} showDemoLayers={false} visibleLayers={['pfz']} showOfficialLayers height="clamp(420px, 68vh, 680px)"
+              baseTiles={<>
+                <TileLayer
+                  url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                  className="map-tiles-charcoal"
+                  maxNativeZoom={16} maxZoom={19}
+                  attribution='Tiles &copy; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <TileLayer
+                  url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+                  maxNativeZoom={16} maxZoom={19}
+                />
+              </>}
+            />
           </div>
           <p className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 text-xs text-slate-400">Click the map to request live weather and ocean conditions. The dotted circle is a weather-risk reading, not a navigational boundary.</p>
         </div>

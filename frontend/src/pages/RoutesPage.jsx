@@ -29,6 +29,22 @@ export default function RoutesPage() {
 
   // Requirement 2: Mobile friendly tab switcher
   const [mobileTab, setMobileTab] = useState('map'); // 'map' | 'planner'
+  const [selectionMode, setSelectionMode] = useState(null);
+  const [customOrigin, setCustomOrigin] = useState(null);
+  const [customDestination, setCustomDestination] = useState(null);
+
+  const handleMapPick = ({ lat, lon, mode }) => {
+    const point = { lat, lon };
+    if (mode === 'origin') setCustomOrigin(point);
+    if (mode === 'destination') setCustomDestination(point);
+    setSelectionMode(mode);
+    setMobileTab('map');
+  };
+
+  const handleRouteGenerated = (plan) => {
+    setCurrentPlan(plan);
+    if (!selectionMode) setMobileTab('planner');
+  };
 
   const fetchLayers = async () => {
     setLoading(true);
@@ -130,9 +146,28 @@ export default function RoutesPage() {
       </div>
 
       {/* Main Grid: Responsive Map + Route Planner Drawer */}
+      {currentPlan && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl border border-cyan-800/70 bg-cyan-950/30 p-3 sm:p-4 shadow-lg">
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-[10px] uppercase tracking-wide text-cyan-300">Route ready</span>
+            <p className="text-xs font-semibold text-white truncate" title={currentPlan.origin?.name}>{currentPlan.origin?.name}</p>
+            <p className="text-[10px] text-slate-400 truncate" title={currentPlan.destination?.name}>to {currentPlan.destination?.name}</p>
+          </div>
+          <div><span className="text-[10px] text-slate-400 block">Distance</span><strong className="text-sm text-white">{currentPlan.lowerRiskProposedRoute?.totalDistanceNm} NM</strong></div>
+          <div><span className="text-[10px] text-slate-400 block">Travel time</span><strong className="text-sm text-white">{currentPlan.lowerRiskProposedRoute?.estimatedDurationHours} h</strong></div>
+          <div><span className="text-[10px] text-slate-400 block">Risk</span><strong className="text-sm text-emerald-300">{currentPlan.lowerRiskProposedRoute?.riskLevel}</strong></div>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Map Column (Left 7 Cols on desktop, or toggled on mobile) */}
         <div className={`space-y-3 lg:col-span-7 lg:sticky lg:top-20 lg:self-start ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+        <div className={`space-y-3 lg:col-span-7 ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+          {selectionMode && (
+            <div className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-xs ${selectionMode === 'origin' ? 'border-emerald-700 bg-emerald-950/50 text-emerald-200' : 'border-cyan-700 bg-cyan-950/50 text-cyan-200'}`}>
+              <span><strong>{selectionMode === 'origin' ? 'Picking custom start' : 'Picking custom end'}</strong> · click the map to replace this point and recalculate.</span>
+              <button type="button" onClick={() => setSelectionMode(null)} className="shrink-0 text-[10px] font-semibold text-slate-300 hover:text-white">Done</button>
+            </div>
+          )}
           <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-2xl bg-slate-950">
             <MarineMap
               layersData={layersData}
@@ -141,6 +176,8 @@ export default function RoutesPage() {
               heightClassName="h-[340px] sm:h-[420px] md:h-[480px] lg:h-[560px] xl:h-[640px]"
               compact={false}
               routePlan={currentPlan}
+              selectionMode={selectionMode}
+              onMapPick={handleMapPick}
               showDirectBaseline={showDirectBaseline}
               onToggleDirectBaseline={setShowDirectBaseline}
             />
@@ -200,8 +237,13 @@ export default function RoutesPage() {
           </div>
 
           <RoutePlanner
-            onRouteGenerated={setCurrentPlan}
+            onRouteGenerated={handleRouteGenerated}
             currentPlan={currentPlan}
+            customOrigin={customOrigin}
+            customDestination={customDestination}
+            selectionMode={selectionMode}
+            onSelectionModeChange={setSelectionMode}
+            onClearCustomPoint={(type) => type === 'origin' ? setCustomOrigin(null) : setCustomDestination(null)}
             showDirectBaseline={showDirectBaseline}
             onToggleDirectBaseline={setShowDirectBaseline}
           />

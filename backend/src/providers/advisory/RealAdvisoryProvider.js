@@ -3,12 +3,22 @@ const IAdvisoryProvider = require('./IAdvisoryProvider');
 
 const SACHET_URL = 'https://sachet.ndma.gov.in/cap_public_website/FetchAllAlertDetails';
 
+function parseCapDate(str) {
+  if (!str) return new Date().toISOString();
+  try {
+    const normalized = String(str).replace(/\bIST\b/g, '+0530');
+    const d = new Date(normalized);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  } catch (e) {}
+  return new Date().toISOString();
+}
+
 const SECTOR_KEYWORDS = {
   'Mumbai Coast': ['maharashtra', 'mumbai', 'konkan', 'thane', 'raigad', 'palghar', 'ratnagiri', 'sindhudurg', 'dahanu', 'murud'],
   'Kochi Harbor': ['kerala', 'kochi', 'ernakulam', 'alappuzha', 'trivandrum', 'malabar', 'kollam', 'kozhikode'],
-  'Chennai Offshore': ['tamil nadu', 'chennai', 'kancheepuram', 'cuddalore', 'nagapattinam', 'tiruvallur'],
-  'Visakhapatnam': ['andhra pradesh', 'visakhapatnam', 'vizag', 'east godavari', 'srikakulam', 'vijayanagaram'],
-  'Porbandar': ['gujarat', 'porbandar', 'saurashtra', 'okha', 'veraval', 'kutch', 'jamnagar']
+  'Chennai Offshore': ['tamil nadu', 'chennai', 'kancheepuram', 'cuddalore', 'nagapattinam', 'tiruvallur', 'ramanathapuram', 'thiruvarur'],
+  'Visakhapatnam': ['andhra pradesh', 'visakhapatnam', 'vizag', 'east godavari', 'srikakulam', 'vijayanagaram', 'andhra', 'kaviti', 'ramachandrapuram'],
+  'Porbandar': ['gujarat', 'porbandar', 'saurashtra', 'okha', 'veraval', 'kutch', 'jamnagar', 'diu', 'daman', 'dadra']
 };
 
 class RealAdvisoryProvider extends BaseProvider {
@@ -34,7 +44,7 @@ class RealAdvisoryProvider extends BaseProvider {
           'Accept': 'application/json, text/plain, */*',
           'User-Agent': 'ORCA-Marine-Intelligence/1.0'
         },
-        signal: AbortSignal.timeout(3500)
+        signal: AbortSignal.timeout(4000)
       });
 
       if (response.ok) {
@@ -54,7 +64,8 @@ class RealAdvisoryProvider extends BaseProvider {
             item.disaster_type,
             item.severity,
             item.warning_message,
-            item.state_name
+            item.state_name,
+            item.alert_source
           ].filter(Boolean).join(' ').toLowerCase();
 
           return keywords.some(kw => textToSearch.includes(kw.toLowerCase()));
@@ -63,26 +74,26 @@ class RealAdvisoryProvider extends BaseProvider {
         liveAlerts = matched.map((item, idx) => {
           const capSeverity = String(item.severity || 'ADVISORY').toUpperCase();
           let severity = 'ADVISORY';
-          if (capSeverity.includes('WARN') || capSeverity.includes('SEV') || capSeverity.includes('ALERT')) {
+          if (capSeverity.includes('WARN') || capSeverity.includes('SEV') || capSeverity.includes('ALERT') || capSeverity.includes('ORANGE') || capSeverity.includes('RED')) {
             severity = 'WARNING';
           } else if (capSeverity.includes('EXTREME') || capSeverity.includes('EMERGENCY')) {
             severity = 'EMERGENCY';
-          } else if (capSeverity.includes('WATCH') || capSeverity.includes('ADVISORY')) {
-            severity = 'ADVISORY';
+          } else if (capSeverity.includes('WATCH') || capSeverity.includes('YELLOW')) {
+            severity = 'WATCH';
           } else {
             severity = 'INFORMATIONAL';
           }
 
           return {
             id: `sachet_${item.identifier || idx}_${Date.now()}`,
-            agency: item.sender_name || 'NDMA Sachet CAP (IMD/INCOIS Multi-Agency Feed)',
+            agency: item.alert_source || item.sender_name || 'NDMA Sachet CAP (IMD/INCOIS Multi-Agency Feed)',
             type: (item.disaster_type || 'COASTAL_WEATHER_ALERT').replace(/\s+/g, '_').toUpperCase(),
             severity,
-            title: `${item.disaster_type || 'Marine Weather Alert'} for ${sectorName}`,
-            issuedAt: item.effective_start_time ? new Date(item.effective_start_time).toISOString() : new Date().toISOString(),
-            effectiveUntil: item.effective_end_time ? new Date(item.effective_end_time).toISOString() : new Date(Date.now() + 86400000).toISOString(),
-            description: item.area_description || item.warning_message || `Active coastal alert broadcast for ${sectorName}.`,
-            actionRecommended: 'Fishermen and coastal craft advised to monitor VHF Channel 16 and exercise caution.',
+            title: `${item.disaster_type || 'Marine Weather Alert'} — ${sectorName}`,
+            issuedAt: parseCapDate(item.effective_start_time),
+            effectiveUntil: item.effective_end_time ? parseCapDate(item.effective_end_time) : new Date(Date.now() + 86400000).toISOString(),
+            description: item.warning_message || item.area_description || `Active coastal alert broadcast for ${sectorName}.`,
+            actionRecommended: 'Fishermen and coastal craft advised to monitor VHF Channel 16 and comply with port guidelines.',
             isDemoData: false
           };
         });
@@ -140,6 +151,17 @@ class RealAdvisoryProvider extends BaseProvider {
 
     // If still empty (calm day with no warnings), output an all-clear informational bulletin
     if (liveAlerts.length === 0) {
+      let waveInfo = '';
+      try {
+        const marineRes = await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period`, { signal: AbortSignal.timeout(3000) });
+        if (marineRes.ok) {
+          const m = await marineRes.json();
+          if (m.current?.wave_height) {
+            waveInfo = ` Live wave height: ${m.current.wave_height}m (period ${m.current.wave_period || 8}s).`;
+          }
+        }
+      } catch (e) {}
+
       liveAlerts.push({
         id: `adv_live_clear_${Date.now()}`,
         agency: 'INCOIS Ocean State Forecast & IMD Marine',
@@ -148,7 +170,7 @@ class RealAdvisoryProvider extends BaseProvider {
         title: `Standard Marine Weather Bulletin — ${sectorName}`,
         issuedAt: new Date().toISOString(),
         effectiveUntil: new Date(Date.now() + 86400000).toISOString(),
-        description: `No active severe cyclone, high wave, or squall warnings in ${sectorName}. Standard coastal marine operations permitted.`,
+        description: `No active severe cyclone, high wave, or squall warnings in ${sectorName}.${waveInfo} Coastal marine operations permitted.`,
         actionRecommended: 'Normal operations with routine safety checks. Verify VHF Channel 16 before departure.',
         isDemoData: false
       });

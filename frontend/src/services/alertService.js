@@ -6,6 +6,7 @@ export const alertService = {
     if (filters.sector) params.append('sector', filters.sector);
     if (filters.severity) params.append('severity', filters.severity);
     if (filters.status) params.append('status', filters.status);
+    if (filters.feedType) params.append('feedType', filters.feedType);
     return await api.get(`/alerts?${params.toString()}`);
   },
 

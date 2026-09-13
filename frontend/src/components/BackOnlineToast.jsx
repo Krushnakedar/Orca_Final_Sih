@@ -1,27 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useOffline } from '../hooks/useOffline';
-import { usePendingActions } from '../context/PendingActionContext';
+import { useSyncStatus } from '../hooks/useSyncStatus';
 
 export default function BackOnlineToast() {
   const { isOnline } = useOffline();
-  const { pending, clear } = usePendingActions();
+  const { pending, failed, isSyncing } = useSyncStatus();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isOnline && pending.length > 0) {
+    if (isOnline && pending > 0 && !isSyncing) {
       setVisible(true);
-      const t = setTimeout(() => {
-        setVisible(false);
-        clear();
-      }, 8000);
+      const t = setTimeout(() => setVisible(false), 6000);
       return () => clearTimeout(t);
     }
-  }, [isOnline, pending.length, clear]);
+  }, [isOnline, pending, isSyncing]);
 
-  if (!visible || pending.length === 0) return null;
-
-  const first = pending[0];
-  const extra = pending.length > 1 ? ` +${pending.length - 1} more` : '';
+  if (!visible || pending === 0) return null;
 
   return (
     <div
@@ -33,13 +27,14 @@ export default function BackOnlineToast() {
         You're back online
       </div>
       <div className="text-slate-300 text-xs">
-        You wanted to retry: <span className="font-medium text-slate-100">{first.label}</span>{extra}
+        {isSyncing
+          ? `Syncing ${pending} queued action${pending === 1 ? '' : 's'}…`
+          : failed > 0
+            ? `${pending} queued · ${failed} failed. Review above.`
+            : `${pending} action${pending === 1 ? '' : 's'} waiting to sync.`}
       </div>
       <button
-        onClick={() => {
-          setVisible(false);
-          clear();
-        }}
+        onClick={() => setVisible(false)}
         className="mt-2 text-[11px] text-slate-400 hover:text-slate-200 transition"
       >
         Dismiss

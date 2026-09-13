@@ -284,6 +284,15 @@ class MarineRoutingService {
     return false;
   }
 
+  validateSeaPoint(coordinates) {
+    if (!Array.isArray(coordinates) || coordinates.length !== 2) return false;
+    const [lon, lat] = coordinates.map(Number);
+    if (!Number.isFinite(lon) || !Number.isFinite(lat) || lon < -180 || lon > 180 || lat < -90 || lat > 90) {
+      return false;
+    }
+    return !this.pointIsOnLand([lon, lat]);
+  }
+
   segmentCrossesLand(start, end, allowStartLand = false, allowEndLand = false) {
     const samples = 10;
     for (let i = 1; i < samples; i++) {
@@ -329,6 +338,24 @@ class MarineRoutingService {
       }
     }
     return { node: nearest, distanceNm: minDist };
+  }
+
+  findNearestReachableMaritimeNode(coordinates) {
+    const candidates = [...this.nodes.values()]
+      .map(node => ({
+        node,
+        distanceNm: getHaversineNm(coordinates[0], coordinates[1], node.coordinates[0], node.coordinates[1])
+      }))
+      .sort((a, b) => a.distanceNm - b.distanceNm);
+
+    const reachable = candidates.find(candidate =>
+      !this.segmentCrossesLand(coordinates, candidate.node.coordinates, true, true)
+    );
+
+    if (!reachable) {
+      throw new Error('Unable to connect waypoint to a navigable water channel');
+    }
+    return reachable;
   }
 
   // Dijkstra / A* shortest path on the maritime graph
@@ -420,13 +447,17 @@ class MarineRoutingService {
       throw new Error('Invalid destination coordinates [lon, lat]');
     }
 
+    if (!this.validateSeaPoint(origin) || !this.validateSeaPoint(dest)) {
+      throw new Error('Origin and destination must both be placed in navigable water');
+    }
+
     const cacheKey = `${origin[0].toFixed(3)},${origin[1].toFixed(3)}->${dest[0].toFixed(3)},${dest[1].toFixed(3)}`;
     if (this.routeCache.has(cacheKey)) {
       return this.routeCache.get(cacheKey);
     }
 
-    const startSnap = this.findNearestMaritimeNode(origin);
-    const goalSnap = this.findNearestMaritimeNode(dest);
+    const startSnap = this.findNearestReachableMaritimeNode(origin);
+    const goalSnap = this.findNearestReachableMaritimeNode(dest);
 
     if (!startSnap.node || !goalSnap.node) {
       throw new Error('Unable to snap route coordinates to maritime navigational network');

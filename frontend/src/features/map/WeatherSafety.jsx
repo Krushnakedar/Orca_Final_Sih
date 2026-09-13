@@ -3,7 +3,7 @@ import { providerService } from '../../services/providerService';
 import { riskService } from '../../services/riskService';
 
 const COLORS = { LOW: '#0ea5e9', MODERATE: '#6366f1', HIGH: '#a855f7', CRITICAL: '#d946ef' };
-const VESSELS = { traditional_unmotorized: 'Canoe / unmotorized', small_motorized: 'Small motorized craft', mechanized_trawler: 'Mechanized trawler', deep_sea_vessel: 'Deep-sea vessel' };
+const VESSEL = { typeKey: 'small_motorized', name: 'Small motorized craft' };
 const isMock = response => Boolean(response?.isFallback || response?.source?.isFallback || response?.source?.isDemoData || response?.provider?.isMock || response?.data?.isFallback);
 const safetyBand = level => level === 'LOW' ? 'LOW' : level === 'MODERATE' ? 'MODERATE' : 'CRITICAL';
 const plainRecommendation = level => level === 'LOW'
@@ -13,7 +13,6 @@ const plainRecommendation = level => level === 'LOW'
     : 'Do not leave in these conditions. Wait for safer weather or use an approved alternative plan.';
 
 export default function WeatherSafety({ point, sector, reading, onReading }) {
-  const [vessel, setVessel] = useState('small_motorized');
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
     let cancelled = false;
@@ -29,7 +28,7 @@ export default function WeatherSafety({ point, sector, reading, onReading }) {
         ]);
         if (!Number.isFinite(weather?.data?.windSpeedKmh) || !Number.isFinite(ocean?.data?.significantWaveHeightM)) throw new Error('Weather or wave measurements are unavailable.');
         if (cancelled) return;
-        const result = await riskService.evaluateRisk({ weather: weather.data, ocean: ocean.data, vesselProfile: { typeKey: vessel, name: VESSELS[vessel] } });
+        const result = await riskService.evaluateRisk({ weather: weather.data, ocean: ocean.data, vesselProfile: VESSEL });
         if (!COLORS[result?.data?.riskLevel]) throw new Error('Risk evaluation is unavailable.');
         if (!cancelled) onReading({ point, weather, ocean, context, risk: result.data, isFallback: isMock(weather) || isMock(ocean) || isMock(result), color: COLORS[result.data.riskLevel] });
       } catch (error) {
@@ -37,16 +36,11 @@ export default function WeatherSafety({ point, sector, reading, onReading }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [point, vessel, sector, refresh, onReading]);
+  }, [point, sector, refresh, onReading]);
 
   return <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5 space-y-3 text-sm" aria-label="Weather safety" aria-live="polite">
     <h2 className="font-semibold text-white">Selected area summary</h2>
-    <p className="text-xs text-slate-400">Choose a vessel, then click anywhere on the map. We check the latest wind, waves and weather for that point.</p>
-    <label className="block text-slate-300">Vessel type
-      <select className="block mt-1 w-full bg-slate-950 border border-slate-700 rounded p-2" value={vessel} onChange={e => setVessel(e.target.value)}>
-        {Object.entries(VESSELS).map(([key, name]) => <option key={key} value={key}>{name}</option>)}
-      </select>
-    </label>
+    <p className="text-xs text-slate-400">Click anywhere on the map. We check the latest wind, waves and weather for that point.</p>
     {!point && <p className="text-slate-300">Select a point on the map to begin.</p>}
     {point && <p className="text-xs text-slate-400">Selected: {point.lat.toFixed(4)}, {point.lon.toFixed(4)}</p>}
     {point && !reading?.risk && !reading?.error && <p>Checking weather and ocean conditions…</p>}

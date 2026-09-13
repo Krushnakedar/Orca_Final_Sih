@@ -160,8 +160,8 @@ class RoutePlanningService {
       originName = `Departure Point (${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
     } else if (typeof origin === 'object' && origin !== null && origin.lat != null && origin.lon != null) {
       originCoord = [parseFloat(origin.lat), parseFloat(origin.lon)];
-      originName = `GPS Position (${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
-      isLiveOrigin = true;
+      originName = `${origin.isCustom ? 'Custom Departure Point' : 'GPS Position'} (${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
+      isLiveOrigin = !origin.isCustom;
     }
 
     // 2. Resolve Destination Coordinates
@@ -186,6 +186,13 @@ class RoutePlanningService {
     } else if (typeof destination === 'object' && destination !== null && destination.lat != null && destination.lon != null) {
       destCoord = [parseFloat(destination.lat), parseFloat(destination.lon)];
       destName = `Target Coordinates (${destCoord[0].toFixed(3)}°N, ${destCoord[1].toFixed(3)}°E)`;
+    }
+
+    if (!MarineRoutingService.validateSeaPoint([originCoord[1], originCoord[0]]) ||
+        !MarineRoutingService.validateSeaPoint([destCoord[1], destCoord[0]])) {
+      const error = new Error('Start and end locations must both be placed in navigable water.');
+      error.statusCode = 400;
+      throw error;
     }
 
     const cruisingSpeed = parseFloat(cruisingSpeedKnots) || 8.5;
@@ -289,44 +296,27 @@ class RoutePlanningService {
     let lowerRiskWaypoints = null;
     let routingMode = 'MARITIME_NETWORK_ASTAR';
 
-    try {
-      const marineRoute = await MarineRoutingService.getSeaRoute({
-        // MarineRoutingService uses GeoJSON [longitude, latitude]
-        origin: [originCoord[1], originCoord[0]],
-        destination: [destCoord[1], destCoord[0]],
-        vesselProfile,
-        cruisingSpeedKnots: cruisingSpeed
-      });
+    const marineRoute = await MarineRoutingService.getSeaRoute({
+      // MarineRoutingService uses GeoJSON [longitude, latitude]
+      origin: [originCoord[1], originCoord[0]],
+      destination: [destCoord[1], destCoord[0]],
+      vesselProfile,
+      cruisingSpeedKnots: cruisingSpeed
+    });
 
-      const marineCoordinates = marineRoute?.geometry?.coordinates;
-      if (Array.isArray(marineCoordinates) && marineCoordinates.length >= 2) {
-        // Convert [lon, lat] → [lat, lon] for the frontend Leaflet API contract
-        lowerRiskWaypoints = marineCoordinates.map(([lon, lat]) => [
-          parseFloat(lat.toFixed(4)),
-          parseFloat(lon.toFixed(4))
-        ]);
-        routingMode = marineRoute.routingMode || 'MARITIME_NETWORK_ASTAR';
-      }
-    } catch (err) {
-      console.warn('Marine routing graph fallback engaged:', err.message);
+    const marineCoordinates = marineRoute?.geometry?.coordinates;
+    if (Array.isArray(marineCoordinates) && marineCoordinates.length >= 2) {
+      // Convert [lon, lat] → [lat, lon] for the frontend Leaflet API contract
+      lowerRiskWaypoints = marineCoordinates.map(([lon, lat]) => [
+        parseFloat(lat.toFixed(4)),
+        parseFloat(lon.toFixed(4))
+      ]);
+      routingMode = marineRoute.routingMode || 'MARITIME_NETWORK_ASTAR';
     }
 
-    // Fallback if routing network could not connect
+    // A route must come from the navigational graph; never invent a detour.
     if (!lowerRiskWaypoints || lowerRiskWaypoints.length < 2) {
-      lowerRiskWaypoints = [originCoord];
-      const midLat = (originCoord[0] + destCoord[0]) / 2;
-      const midLon = (originCoord[1] + destCoord[1]) / 2;
-
-      // Safe detour offset west/south of naval firing range
-      let detourLat = -0.06;
-      let detourLon = +0.02;
-
-      lowerRiskWaypoints.push(
-        [parseFloat((originCoord[0] * 0.7 + midLat * 0.3 + detourLat).toFixed(4)), parseFloat((originCoord[1] * 0.7 + midLon * 0.3 + detourLon).toFixed(4))],
-        [parseFloat((midLat + detourLat).toFixed(4)), parseFloat((midLon + detourLon).toFixed(4))],
-        [parseFloat((destCoord[0] * 0.7 + midLat * 0.3 + detourLat).toFixed(4)), parseFloat((destCoord[1] * 0.7 + midLon * 0.3 + detourLon).toFixed(4))],
-        destCoord
-      );
+      throw new Error('No navigable water channel found between the selected points');
     }
 
     let lowerRiskDistanceKm = 0;
