@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { alertService } from '../services/alertService';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function Header({ apiStatus, onMenuClick }) {
   const { user, isAuthenticated, logout } = useAuth();
@@ -64,20 +63,14 @@ export default function Header({ apiStatus, onMenuClick }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-black text-lg tracking-wider text-white">ORCA</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-ocean-950 border border-ocean-800 text-tealAccent-400 font-bold hidden xs:inline-block">
-                SIH 2026
-              </span>
             </div>
             <p className="text-[10px] text-slate-400 leading-none hidden sm:block">Agentic Marine Intelligence Platform</p>
           </div>
         </Link>
       </div>
 
-      {/* Right Controls: Language Switcher, Alerts Bell, Backend State & Operator Auth */}
+      {/* Right Controls: Alerts Bell, Backend State & Operator Auth */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {/* Phase 13 Language Switcher */}
-        <LanguageSwitcher />
-
         {/* Active Emergency Alerts Bell Link */}
         <Link
           to="/alerts"
