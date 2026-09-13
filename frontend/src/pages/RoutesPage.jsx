@@ -132,13 +132,13 @@ export default function RoutesPage() {
       {/* Main Grid: Responsive Map + Route Planner Drawer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Map Column (Left 7 Cols on desktop, or toggled on mobile) */}
-        <div className={`space-y-3 lg:col-span-7 ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+        <div className={`space-y-3 lg:col-span-7 lg:sticky lg:top-20 lg:self-start ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
           <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-2xl bg-slate-950">
             <MarineMap
               layersData={layersData}
               selectedSector={selectedSector}
               onSelectSector={setSelectedSector}
-              height="580px"
+              heightClassName="h-[340px] sm:h-[420px] md:h-[480px] lg:h-[560px] xl:h-[640px]"
               compact={false}
               routePlan={currentPlan}
               showDirectBaseline={showDirectBaseline}

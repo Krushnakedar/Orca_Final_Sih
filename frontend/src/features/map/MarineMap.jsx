@@ -154,11 +154,21 @@ function MapView({
   }, [map, origin?.lat, origin?.lon, destination?.lat, destination?.lon, routeGeometry]);
 
   // Fit to GIS layer collection when there is nothing else to focus on.
+  // Guarded against oversized/placeholder geometry: if the collection's bounds
+  // span an unreasonably large area for a single operational sector (e.g. bad
+  // or malformed feature coordinates), keep the sector-centered default view
+  // instead of zooming out to a whole-region/continent extent.
   useEffect(() => {
     const collection = layersData?.features ? layersData : layersData?.pfz;
     if (simulation || origin || destination || !collection?.features?.length) return;
     const bounds = L.geoJSON(collection).getBounds();
-    if (bounds.isValid()) map.fitBounds(bounds.pad(0.2), { maxZoom: 8 });
+    if (!bounds.isValid()) return;
+    const MAX_SECTOR_SPAN_DEGREES = 6;
+    const spansTooWide =
+      bounds.getNorth() - bounds.getSouth() > MAX_SECTOR_SPAN_DEGREES ||
+      bounds.getEast() - bounds.getWest() > MAX_SECTOR_SPAN_DEGREES;
+    if (spansTooWide) return;
+    map.fitBounds(bounds.pad(0.2), { maxZoom: 8 });
   }, [map, layersData, simulation, origin, destination]);
 
   return null;
@@ -201,6 +211,7 @@ export default function MarineMap({
   selectedSector = "Mumbai Coast",
   onSelectSector,
   height = "500px",
+  heightClassName = "",
   compact = false,
   routePlan = null,
   showDirectBaseline = false,
@@ -276,8 +287,8 @@ export default function MarineMap({
 
   return (
     <div
-      className="relative isolate min-w-0 w-full rounded-2xl overflow-hidden border border-slate-800"
-      style={{ height }}
+      className={`relative isolate min-w-0 w-full rounded-2xl overflow-hidden border border-slate-800 ${heightClassName}`}
+      style={heightClassName ? undefined : { height }}
     >
       <MapContainer
         center={center}

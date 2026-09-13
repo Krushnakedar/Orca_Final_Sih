@@ -24,6 +24,7 @@ import { chatService } from '../../services/chatService';
 import AgentTraceViewer from './AgentTraceViewer';
 import EvidenceDrawer from '../explainability/EvidenceDrawer';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { useLanguage } from '../../context/LanguageContext';
 
 const SECTORS = [
@@ -191,7 +192,9 @@ export default function ChatWindow() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <LanguageSwitcher />
+
           <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300">
             <MapPin className="w-3.5 h-3.5 text-ocean-400" />
             <select
