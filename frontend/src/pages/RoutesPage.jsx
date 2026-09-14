@@ -161,7 +161,6 @@ export default function RoutesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Map Column (Left 7 Cols on desktop, or toggled on mobile) */}
         <div className={`space-y-3 lg:col-span-7 lg:sticky lg:top-20 lg:self-start ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
-        <div className={`space-y-3 lg:col-span-7 ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
           {selectionMode && (
             <div className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-xs ${selectionMode === 'origin' ? 'border-emerald-700 bg-emerald-950/50 text-emerald-200' : 'border-cyan-700 bg-cyan-950/50 text-cyan-200'}`}>
               <span><strong>{selectionMode === 'origin' ? 'Picking custom start' : 'Picking custom end'}</strong> · click the map to replace this point and recalculate.</span>
