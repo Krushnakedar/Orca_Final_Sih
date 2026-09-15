@@ -79,11 +79,23 @@ api.interceptors.response.use(
     const cfg = error.config || {};
     const method = (cfg.method || 'get').toLowerCase();
 
-    // OFFLINE FALLBACK — only for whitelisted GETs, only on network failure.
+    // OFFLINE FALLBACK — whitelisted GETs on network failure, proxy disconnect, or backend down.
+    const isProxyBackendDown =
+      (error.response?.status >= 500 && error.response?.status <= 504) &&
+      (String(error.response?.data).includes('ECONNREFUSED') ||
+       String(error.response?.data?.message || '').includes('ECONNREFUSED') ||
+       String(error.message || '').includes('Network Error') ||
+       String(error.message || '').includes('status code 500'));
+
+    const isOfflineNetwork =
+      typeof navigator !== 'undefined' && !navigator.onLine;
+
     const isNetworkFailure =
       error.code === 'ERR_NETWORK' ||
       error.code === 'ECONNABORTED' ||
-      (!error.response && error.request);
+      (!error.response && error.request) ||
+      isProxyBackendDown ||
+      isOfflineNetwork;
 
     if (isNetworkFailure && method === 'get' && isCacheable(cfg.url)) {
       try {
