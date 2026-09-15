@@ -81,7 +81,10 @@ class RealPFZProvider extends BaseProvider {
 
   _buildZones(lat, lon, liveSst) {
     const isKochi = lat < 12.0;
-    const baselineChlorophyll = 0.95; // Copernicus seasonal baseline
+    const baselineChlorophyll = isKochi ? 1.62 : 1.25;
+    const validUntilDate = new Date(Date.now() + 48 * 3600000);
+    const validDateStr = validUntilDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const validityWindow = `Valid until ${validDateStr} (48h active window)`;
 
     if (isKochi) {
       return [
@@ -104,7 +107,8 @@ class RealPFZProvider extends BaseProvider {
             "Squid (Loligo duvauceli)",
           ],
           depthRangeMeters: "30 - 48m",
-          validUntil: new Date(Date.now() + 86400000).toISOString(),
+          validityWindow,
+          validUntil: validUntilDate.toISOString(),
           geometry: {
             type: "Polygon",
             coordinates: [
@@ -137,7 +141,8 @@ class RealPFZProvider extends BaseProvider {
         thermalGradientCPerKm: 0.09,
         targetSpecies: ["Indian Mackerel", "Carangids (Trevally)", "Seer Fish"],
         depthRangeMeters: "35 - 52m",
-        validUntil: new Date(Date.now() + 86400000).toISOString(),
+        validityWindow,
+        validUntil: validUntilDate.toISOString(),
         geometry: {
           type: "Polygon",
           coordinates: [
@@ -166,7 +171,8 @@ class RealPFZProvider extends BaseProvider {
         thermalGradientCPerKm: 0.08,
         targetSpecies: ["Yellowfin Tuna", "Ribbonfish", "Anchovies"],
         depthRangeMeters: "45 - 65m",
-        validUntil: new Date(Date.now() + 86400000).toISOString(),
+        validityWindow,
+        validUntil: validUntilDate.toISOString(),
         geometry: {
           type: "Polygon",
           coordinates: [
