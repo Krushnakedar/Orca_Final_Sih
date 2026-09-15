@@ -1,8 +1,80 @@
 const { orchestrator } = require('../agents');
 const MemoryService = require('../services/memory.service');
 
-// In-memory conversation session store
-const conversationSessions = new Map();
+// Bounded in-memory conversation session store with TTL & LRU eviction
+const MAX_SESSIONS = 1000;
+const MAX_MESSAGES_PER_SESSION = 50;
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+class BoundedSessionStore {
+  constructor(maxSessions = MAX_SESSIONS, ttlMs = SESSION_TTL_MS) {
+    this.maxSessions = maxSessions;
+    this.ttlMs = ttlMs;
+    this.store = new Map();
+
+    const pruneTimer = setInterval(() => this.pruneExpired(), 15 * 60 * 1000);
+    if (pruneTimer.unref) pruneTimer.unref();
+  }
+
+  pruneExpired() {
+    const now = Date.now();
+    for (const [id, session] of this.store.entries()) {
+      if (now - session.lastAccessedAt > this.ttlMs) {
+        this.store.delete(id);
+      }
+    }
+  }
+
+  get(id) {
+    const session = this.store.get(id);
+    if (!session) return null;
+    if (Date.now() - session.lastAccessedAt > this.ttlMs) {
+      this.store.delete(id);
+      return null;
+    }
+    session.lastAccessedAt = Date.now();
+    // Refresh LRU order in Map
+    this.store.delete(id);
+    this.store.set(id, session);
+    return session.messages;
+  }
+
+  has(id) {
+    return this.get(id) !== null;
+  }
+
+  append(id, ...messages) {
+    const now = Date.now();
+    let session = this.store.get(id);
+
+    if (!session || (now - session.lastAccessedAt > this.ttlMs)) {
+      if (this.store.size >= this.maxSessions) {
+        this.pruneExpired();
+        if (this.store.size >= this.maxSessions) {
+          const oldestKey = this.store.keys().next().value;
+          if (oldestKey) this.store.delete(oldestKey);
+        }
+      }
+      session = { messages: [], lastAccessedAt: now };
+    }
+
+    session.lastAccessedAt = now;
+    session.messages.push(...messages);
+    if (session.messages.length > MAX_MESSAGES_PER_SESSION) {
+      session.messages = session.messages.slice(-MAX_MESSAGES_PER_SESSION);
+    }
+
+    this.store.delete(id);
+    this.store.set(id, session);
+    return session.messages;
+  }
+
+  delete(id) {
+    return this.store.delete(id);
+  }
+}
+
+const conversationSessions = new BoundedSessionStore();
 
 const handleChatMessage = async (req, res, next) => {
   try {
@@ -12,6 +84,13 @@ const handleChatMessage = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Message content is required'
+      });
+    }
+
+    if (message.length > 2000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message is too long (maximum 2,000 characters)'
       });
     }
 
@@ -40,11 +119,7 @@ const handleChatMessage = async (req, res, next) => {
       ...aiResponse
     };
 
-    if (!conversationSessions.has(convId)) {
-      conversationSessions.set(convId, []);
-    }
-    const sessionHistory = conversationSessions.get(convId);
-    sessionHistory.push(userMsgObj, aiMsgObj);
+    conversationSessions.append(convId, userMsgObj, aiMsgObj);
 
     return res.status(200).json({
       success: true,
@@ -60,7 +135,8 @@ const handleChatMessage = async (req, res, next) => {
 const getChatHistory = (req, res, next) => {
   try {
     const convId = req.query.conversationId;
-    if (!convId || !conversationSessions.has(convId)) {
+    const history = convId ? conversationSessions.get(convId) : null;
+    if (!convId || !history) {
       return res.status(200).json({
         success: true,
         conversationId: convId || 'default',
@@ -71,7 +147,7 @@ const getChatHistory = (req, res, next) => {
     return res.status(200).json({
       success: true,
       conversationId: convId,
-      messages: conversationSessions.get(convId)
+      messages: history
     });
   } catch (error) {
     next(error);
@@ -81,10 +157,8 @@ const getChatHistory = (req, res, next) => {
 const resetChatSession = async (req, res, next) => {
   try {
     const { conversationId } = req.body;
-    if (conversationId && conversationSessions.has(conversationId)) {
-      conversationSessions.delete(conversationId);
-    }
     if (conversationId) {
+      conversationSessions.delete(conversationId);
       await MemoryService.clearConversation(conversationId);
     }
     return res.status(200).json({

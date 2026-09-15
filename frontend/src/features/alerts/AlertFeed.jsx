@@ -77,9 +77,16 @@ export default function AlertFeed({ onAlertChange }) {
   };
 
   const handleAcknowledge = async (id) => {
+    let prevStatus = 'ACTIVE';
     // Optimistic UI: reflect the ack immediately.
     setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: 'ACKNOWLEDGED' } : a)),
+      prev.map((a) => {
+        if (a.id === id) {
+          prevStatus = a.status;
+          return { ...a, status: 'ACKNOWLEDGED' };
+        }
+        return a;
+      }),
     );
 
     try {
@@ -96,7 +103,7 @@ export default function AlertFeed({ onAlertChange }) {
         // api.js did not queue — endpoint is not in syncPolicy.
         // Roll back the optimistic UI change.
         setAlerts((prev) =>
-          prev.map((a) => (a.id === id ? { ...a, status: a.status } : a)),
+          prev.map((a) => (a.id === id ? { ...a, status: prevStatus } : a)),
         );
       } else {
         console.error('Acknowledge error:', err);
