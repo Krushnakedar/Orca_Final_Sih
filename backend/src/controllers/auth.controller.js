@@ -21,6 +21,8 @@ const register = async (req, res, next) => {
       });
     }
 
+    const normalizedEmail = (email || '').toLowerCase().trim();
+
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
@@ -28,7 +30,14 @@ const register = async (req, res, next) => {
       });
     }
 
-    const existingUser = await UserModel.findByEmail(email);
+    if (password.length > 72) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must not exceed 72 characters'
+      });
+    }
+
+    const existingUser = await UserModel.findByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -36,13 +45,27 @@ const register = async (req, res, next) => {
       });
     }
 
+    // Security Hardening: Whitelist permitted self-registration roles to prevent privilege escalation (Mass Assignment)
+    const ALLOWED_ROLES = ['fisherman', 'vessel_operator'];
+    let safeRole = 'fisherman';
+    if (role) {
+      const requestedRole = role.toLowerCase().trim();
+      if (!ALLOWED_ROLES.includes(requestedRole)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized role specified. Self-registration is restricted to fisherman and vessel_operator.'
+        });
+      }
+      safeRole = requestedRole;
+    }
+
     const newUser = await UserModel.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       password,
-      role: role || 'fisherman',
-      organization: organization || '',
-      vesselName: vesselName || '',
+      role: safeRole,
+      organization: (organization || '').trim(),
+      vesselName: (vesselName || '').trim(),
       preferredSector: preferredSector || 'Arabian Sea / Mumbai Coast'
     });
 
