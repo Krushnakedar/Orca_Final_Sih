@@ -9,7 +9,6 @@ export default function HomePage({ apiStatus }) {
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ocean-950/80 border border-ocean-800 text-ocean-300 text-xs font-semibold">
             <Waves className="w-3.5 h-3.5" />
-            <span>Smart India Hackathon 2026</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
