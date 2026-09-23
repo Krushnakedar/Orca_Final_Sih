@@ -2,9 +2,13 @@ require("dotenv").config();
 
 if (!process.env.JWT_SECRET) {
   if (process.env.NODE_ENV === "production") {
-    console.error("[SECURITY CRITICAL] JWT_SECRET environment variable is missing in production! System must be secured with a robust secret.");
+    console.error(
+      "[SECURITY CRITICAL] JWT_SECRET environment variable is missing in production! System must be secured with a robust secret.",
+    );
   } else if (process.env.NODE_ENV !== "test") {
-    console.warn("[SECURITY NOTICE] JWT_SECRET is not explicitly set; utilizing local development fallback secret.");
+    console.warn(
+      "[SECURITY NOTICE] JWT_SECRET is not explicitly set; utilizing local development fallback secret.",
+    );
   }
 }
 
