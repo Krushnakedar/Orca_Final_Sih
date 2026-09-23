@@ -1,5 +1,10 @@
 require("dotenv").config();
 
+const configuredDatabaseUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+const databaseUrl = configuredDatabaseUrl && !/[<>]/.test(configuredDatabaseUrl)
+  ? configuredDatabaseUrl
+  : process.env.DATABASE_URL;
+
 if (!process.env.JWT_SECRET) {
   if (process.env.NODE_ENV === "production") {
     console.error("[SECURITY CRITICAL] JWT_SECRET environment variable is missing in production! System must be secured with a robust secret.");
@@ -19,7 +24,9 @@ module.exports = {
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  databaseUrl: process.env.DATABASE_URL,
+  // Prefer the explicit Supabase pooler URL when provided. The direct
+  // db.<project>.supabase.co host is not available for every project/network.
+  databaseUrl,
   pfz: {
     timeoutMs: parseInt(process.env.PFZ_TIMEOUT_MS, 10) || 4000,
     sstSource: process.env.PFZ_SST_SOURCE || "open-meteo",

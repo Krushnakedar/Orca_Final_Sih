@@ -50,8 +50,8 @@ const SECTOR_CENTERS = {
   "Mumbai Coast": [18.922, 72.8347],
   "Kochi Harbor": [9.9312, 76.2673],
   "Chennai Offshore": [13.0827, 80.2707],
-  Visakhapatnam: [17.6868, 83.2185],
-  Porbandar: [21.6417, 69.6293],
+  "Visakhapatnam": [17.6868, 83.2185],
+  "Porbandar": [21.6417, 69.6293],
 };
 
 const createCustomIcon = (colorBg, symbol) =>

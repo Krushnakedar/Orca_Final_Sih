@@ -14,8 +14,8 @@ const HARBORS_REGISTRY = [
 ];
 
 const DESTINATIONS_REGISTRY = [
-  { id: 'mumbai_pfz_alpha', name: 'Mumbai PFZ Alpha (Thermal Front)', sector: 'Mumbai Coast', coordinates: [18.9000, 72.4800], targetSpecies: ['Indian Mackerel', 'Carangids'] },
-  { id: 'mumbai_deep_shelf', name: 'Mumbai Outer Shelf Grounds (Deep Sea)', sector: 'Mumbai Coast', coordinates: [18.7200, 72.2000], targetSpecies: ['Yellowfin Tuna', 'Squid'] },
+  { id: 'mumbai_pfz_alpha', name: 'Mumbai PFZ Alpha (Thermal Front)', sector: 'Mumbai Coast', coordinates: [18.3500, 72.4000], targetSpecies: ['Indian Mackerel', 'Carangids'] },
+  { id: 'mumbai_deep_shelf', name: 'Mumbai Outer Shelf Grounds (Deep Sea)', sector: 'Mumbai Coast', coordinates: [18.6000, 72.0500], targetSpecies: ['Yellowfin Tuna', 'Squid'] },
   { id: 'kochi_pfz_chavakkad', name: 'Kochi Offshore PFZ (Thermal Front)', sector: 'Kochi Harbor', coordinates: [10.1500, 75.8500], targetSpecies: ['Oil Sardine', 'Seer Fish'] },
   { id: 'chennai_pfz_coromandel', name: 'Chennai Coromandel PFZ Front', sector: 'Chennai Offshore', coordinates: [13.2500, 80.5500], targetSpecies: ['Skipjack Tuna', 'Ribbon Fish'] },
   { id: 'vizag_pfz_bengal', name: 'Visakhapatnam Bay Upwelling Zone', sector: 'Visakhapatnam', coordinates: [17.8500, 83.5500], targetSpecies: ['Anchovy', 'Mackerel'] },
@@ -116,6 +116,34 @@ const getBearingDegrees = (lat1, lon1, lat2, lon2) => {
   return Math.round((Math.atan2(y, x) * 180 / Math.PI + 360) % 360);
 };
 
+const auditRouteGeofences = (coordinates) => {
+  const breachedZones = [];
+  const samplePoint = (lat, lon) => {
+    const audit = GeofenceService.checkLocation({ lat, lon });
+    for (const zone of audit.breachedZones || []) {
+      if (!breachedZones.some((item) => item.id === zone.id)) breachedZones.push(zone);
+    }
+  };
+
+  for (let index = 0; index < coordinates.length; index += 1) {
+    const from = coordinates[index];
+    samplePoint(from[0], from[1]);
+    if (index === coordinates.length - 1) continue;
+
+    const to = coordinates[index + 1];
+    const samples = Math.max(2, Math.ceil(getHaversineKm(from[0], from[1], to[0], to[1]) / 5));
+    for (let step = 1; step < samples; step += 1) {
+      const fraction = step / samples;
+      samplePoint(
+        from[0] + fraction * (to[0] - from[0]),
+        from[1] + fraction * (to[1] - from[1])
+      );
+    }
+  }
+
+  return breachedZones;
+};
+
 class RoutePlanningService {
   static getHarbors() {
     return HARBORS_REGISTRY;
@@ -188,11 +216,21 @@ class RoutePlanningService {
       destName = `Target Coordinates (${destCoord[0].toFixed(3)}°N, ${destCoord[1].toFixed(3)}°E)`;
     }
 
-    if (!MarineRoutingService.validateSeaPoint([originCoord[1], originCoord[0]]) ||
-        !MarineRoutingService.validateSeaPoint([destCoord[1], destCoord[0]])) {
-      const error = new Error('Start and end locations must both be placed in navigable water.');
-      error.statusCode = 400;
-      throw error;
+    // 2.5 Smart Coastal & Water Validation: Snap land-based GPS fixes or coastal points to safe sea lane
+    const originSnap = MarineRoutingService.snapToNavigableWater([originCoord[1], originCoord[0]]);
+    if (originSnap.wasSnapped) {
+      originCoord = [originSnap.coordinates[1], originSnap.coordinates[0]];
+      if (isLiveOrigin) {
+        originName = `Live Vessel GPS (Snapped to Coastal Fix: ${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
+      } else {
+        originName = `${originName} (Navigable Fix: ${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
+      }
+    }
+
+    const destSnap = MarineRoutingService.snapToNavigableWater([destCoord[1], destCoord[0]]);
+    if (destSnap.wasSnapped) {
+      destCoord = [destSnap.coordinates[1], destSnap.coordinates[0]];
+      destName = `${destName} (Navigable Fix: ${destCoord[0].toFixed(3)}°N, ${destCoord[1].toFixed(3)}°E)`;
     }
 
     const cruisingSpeed = parseFloat(cruisingSpeedKnots) || 8.5;
@@ -319,6 +357,13 @@ class RoutePlanningService {
       throw new Error('No navigable water channel found between the selected points');
     }
 
+    const proposedBreaches = auditRouteGeofences(lowerRiskWaypoints);
+    if (proposedBreaches.length > 0) {
+      const error = new Error(`No safe route found that avoids restricted zones: ${proposedBreaches.map((zone) => zone.name).join(', ')}`);
+      error.statusCode = 409;
+      throw error;
+    }
+
     let lowerRiskDistanceKm = 0;
     for (let i = 0; i < lowerRiskWaypoints.length - 1; i++) {
       lowerRiskDistanceKm += getHaversineKm(
@@ -327,7 +372,7 @@ class RoutePlanningService {
       );
     }
     const lowerRiskDistanceNm = parseFloat((lowerRiskDistanceKm / 1.852).toFixed(1));
-    const lowerRiskDurationHours = parseFloat((lowerRiskDistanceKm / speedKmh).toFixed(1));
+    const lowerRiskDurationHours = parseFloat((lowerRiskDistanceNm / cruisingSpeed).toFixed(1));
 
     // Lower-risk route travels along sheltered coastal corridors with zero military breaches
     const lowerRiskWaveExposureM = parseFloat(Math.min(liveWaveHeightM, 1.6).toFixed(1));
@@ -356,6 +401,16 @@ class RoutePlanningService {
       finalLowerRiskScore = Math.max(12, directRisk.riskScore - 35);
     }
 
+    // Dynamic fuel calculation based on vessel type and wave exposure
+    const fuelRateMap = {
+      traditional_craft: 1.4,
+      small_motorized: 2.4,
+      trawler: 5.6
+    };
+    const baseFuelRate = fuelRateMap[vesselProfile.typeKey] || 2.4;
+    const swellFactor = lowerRiskWaveExposureM > 2.0 ? 1.25 : lowerRiskWaveExposureM > 1.4 ? 1.12 : 1.0;
+    const computedFuelLiters = Math.round(lowerRiskDistanceNm * baseFuelRate * swellFactor);
+
     // 6. Build Turn-by-Turn Steerage Directives with Contextual Telemetry
     const turnByTurnDirectives = [];
     for (let i = 0; i < lowerRiskWaypoints.length - 1; i++) {
@@ -380,7 +435,7 @@ class RoutePlanningService {
         bearingDegrees: bearingDeg,
         distanceNm: legDistNm,
         distanceKm: parseFloat(legDistKm.toFixed(1)),
-        estimatedMinutes: Math.max(1, Math.round((legDistKm / speedKmh) * 60)),
+        estimatedMinutes: Math.max(1, Math.round((legDistNm / cruisingSpeed) * 60)),
         instruction,
         waveHeightM: lowerRiskWaveExposureM,
         windSpeedKmh: lowerRiskWindExposureKmh,
@@ -446,7 +501,7 @@ class RoutePlanningService {
         riskLevel: finalLowerRiskScore <= 35 ? 'LOW' : finalLowerRiskScore <= 65 ? 'MODERATE' : 'CRITICAL',
         geofenceStatus: 'CLEAR_OF_ALL_RESTRICTIONS',
         hazardBreaches: 0,
-        estimatedFuelLiters: Math.round(lowerRiskDistanceNm * 2.8),
+        estimatedFuelLiters: computedFuelLiters,
         environmentalParameters: {
           waveHeightM: lowerRiskWaveExposureM,
           swellHeightM: liveSwellHeightM,

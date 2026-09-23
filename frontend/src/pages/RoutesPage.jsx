@@ -37,13 +37,12 @@ export default function RoutesPage() {
     const point = { lat, lon };
     if (mode === 'origin') setCustomOrigin(point);
     if (mode === 'destination') setCustomDestination(point);
-    setSelectionMode(mode);
-    setMobileTab('map');
+    setSelectionMode(null); // Clear selection mode after point is picked
+    setMobileTab('planner'); // Switch to planner tab to show the picked point
   };
 
   const handleRouteGenerated = (plan) => {
     setCurrentPlan(plan);
-    if (!selectionMode) setMobileTab('planner');
   };
 
   const fetchLayers = async () => {
@@ -68,15 +67,15 @@ export default function RoutesPage() {
   }, [selectedSector]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Top Header - Fully Responsive Stack on Mobile */}
+    <div className="space-y-4 sm:space-y-5">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Lower-Risk Vessel Route Planner
+              Route Planner
             </h1>
-            <span className="text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300 font-medium">
+            <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300 font-medium">
               100% Waterway Routing
             </span>
             <StaleBadge
@@ -84,14 +83,14 @@ export default function RoutesPage() {
             />
           </div>
           <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-            Intelligent waypoint trajectory planning avoiding naval exercise perimeters, high swell shoals, and MPAs
+            Intelligent maritime route planning — avoiding naval exercise zones, hazardous shoals, and MPAs
           </p>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Sector Selector */}
           <div className="flex-1 sm:flex-initial flex items-center gap-2 bg-slate-900 border border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs text-slate-300">
-            <MapPin className="w-3.5 h-3.5 text-ocean-400 shrink-0" />
+            <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span className="text-slate-400 hidden sm:inline">Sector:</span>
             <select
               value={selectedSector}
@@ -111,12 +110,12 @@ export default function RoutesPage() {
             className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 transition shrink-0"
             title="Reload Map Layers"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-ocean-400 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* Mobile Tab Switcher (< lg screens) */}
+      {/* Mobile Tab Switcher */}
       <div className="flex lg:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
         <button
           onClick={() => setMobileTab('map')}
@@ -138,41 +137,71 @@ export default function RoutesPage() {
           }`}
         >
           <Navigation className="w-3.5 h-3.5" />
-          <span>Route Directives & Telemetry</span>
+          <span>Route Controls</span>
           {currentPlan && (
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
           )}
         </button>
       </div>
 
-      {/* Main Grid: Responsive Map + Route Planner Drawer */}
+      {/* Route Summary Bar (when route is computed) */}
       {currentPlan && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl border border-cyan-800/70 bg-cyan-950/30 p-3 sm:p-4 shadow-lg">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl border border-cyan-800/50 bg-cyan-950/20 p-3 sm:p-4">
           <div className="col-span-2 sm:col-span-1">
-            <span className="text-[10px] uppercase tracking-wide text-cyan-300">Route ready</span>
+            <span className="text-[10px] uppercase tracking-wide text-cyan-400 block">Route Ready</span>
             <p className="text-xs font-semibold text-white truncate" title={currentPlan.origin?.name}>{currentPlan.origin?.name}</p>
-            <p className="text-[10px] text-slate-400 truncate" title={currentPlan.destination?.name}>to {currentPlan.destination?.name}</p>
+            <p className="text-[10px] text-slate-400 truncate" title={currentPlan.destination?.name}>→ {currentPlan.destination?.name}</p>
           </div>
-          <div><span className="text-[10px] text-slate-400 block">Distance</span><strong className="text-sm text-white">{currentPlan.lowerRiskProposedRoute?.totalDistanceNm} NM</strong></div>
-          <div><span className="text-[10px] text-slate-400 block">Travel time</span><strong className="text-sm text-white">{currentPlan.lowerRiskProposedRoute?.estimatedDurationHours} h</strong></div>
-          <div><span className="text-[10px] text-slate-400 block">Risk</span><strong className="text-sm text-emerald-300">{currentPlan.lowerRiskProposedRoute?.riskLevel}</strong></div>
+          <div className="bg-slate-950/40 rounded-xl px-3 py-2">
+            <span className="text-[10px] text-slate-500 block">Distance</span>
+            <strong className="text-base text-white">{currentPlan.lowerRiskProposedRoute?.totalDistanceNm} <span className="text-xs font-normal text-slate-400">NM</span></strong>
+          </div>
+          <div className="bg-slate-950/40 rounded-xl px-3 py-2">
+            <span className="text-[10px] text-slate-500 block">Est. Time</span>
+            <strong className="text-base text-white">{currentPlan.lowerRiskProposedRoute?.estimatedDurationHours} <span className="text-xs font-normal text-slate-400">hrs</span></strong>
+          </div>
+          <div className="bg-slate-950/40 rounded-xl px-3 py-2">
+            <span className="text-[10px] text-slate-500 block">Risk Level</span>
+            <strong className={`text-base ${
+              currentPlan.lowerRiskProposedRoute?.riskLevel === 'LOW' ? 'text-emerald-400' :
+              currentPlan.lowerRiskProposedRoute?.riskLevel === 'MODERATE' ? 'text-amber-400' : 'text-rose-400'
+            }`}>{currentPlan.lowerRiskProposedRoute?.riskLevel || '—'}</strong>
+          </div>
         </div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-        {/* Map Column (Left 7 Cols on desktop, or toggled on mobile) */}
-        <div className={`space-y-3 lg:col-span-7 lg:sticky lg:top-20 lg:self-start ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 lg:items-start">
+
+        {/* Map Column — 7 cols, sticky */}
+        <div className={`space-y-3 lg:col-span-7 ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+          {/* Selection mode hint banner */}
           {selectionMode && (
-            <div className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-xs ${selectionMode === 'origin' ? 'border-emerald-700 bg-emerald-950/50 text-emerald-200' : 'border-cyan-700 bg-cyan-950/50 text-cyan-200'}`}>
-              <span><strong>{selectionMode === 'origin' ? 'Picking custom start' : 'Picking custom end'}</strong> · click the map to replace this point and recalculate.</span>
-              <button type="button" onClick={() => setSelectionMode(null)} className="shrink-0 text-[10px] font-semibold text-slate-300 hover:text-white">Done</button>
+            <div className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-xs ${
+              selectionMode === 'origin'
+                ? 'border-emerald-700 bg-emerald-950/50 text-emerald-200'
+                : 'border-cyan-700 bg-cyan-950/50 text-cyan-200'
+            }`}>
+              <span>
+                <strong>{selectionMode === 'origin' ? '📍 Picking start point' : '🎯 Picking end point'}</strong>
+                {' '}— click anywhere on the water to set this location.
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectionMode(null)}
+                className="shrink-0 text-[10px] font-semibold text-slate-300 hover:text-white px-2 py-1 rounded bg-slate-900 border border-slate-700"
+              >
+                Cancel
+              </button>
             </div>
           )}
+
           <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-2xl bg-slate-950">
             <MarineMap
               layersData={layersData}
               selectedSector={selectedSector}
               onSelectSector={setSelectedSector}
-              heightClassName="h-[340px] sm:h-[420px] md:h-[480px] lg:h-[560px] xl:h-[640px]"
+              heightClassName="h-[340px] sm:h-[420px] md:h-[500px] lg:h-[580px] xl:h-[650px]"
               compact={false}
               routePlan={currentPlan}
               selectionMode={selectionMode}
@@ -182,56 +211,52 @@ export default function RoutesPage() {
             />
           </div>
 
-          {/* Quick Route Status Bar & Baseline Toggle */}
+          {/* Map legend bar */}
           <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="flex items-center gap-1.5 font-medium">
-                <span className="w-3 h-1 bg-cyan-400 inline-block shadow-sm shadow-cyan-400 rounded-full" />
-                <span className="text-cyan-200">Recommended Water Route (100% Safe)</span>
+                <span className="w-4 h-1 bg-cyan-400 inline-block rounded-full shadow-sm shadow-cyan-400" />
+                <span className="text-cyan-200">Safe Sea Route</span>
               </span>
-
               {showDirectBaseline && (
                 <span className="flex items-center gap-1.5 font-medium text-rose-300">
-                  <span className="w-3 h-1 bg-rose-500 border-dashed inline-block" />
-                  <span>Direct Baseline (Unsafe Land Cut)</span>
+                  <span className="w-4 h-0.5 border-t-2 border-dashed border-rose-500 inline-block" />
+                  <span>Direct Baseline</span>
                 </span>
               )}
             </div>
-
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-400 hover:text-slate-200 select-none">
-                <input
-                  type="checkbox"
-                  checked={showDirectBaseline}
-                  onChange={(e) => setShowDirectBaseline(e.target.checked)}
-                  className="rounded accent-rose-500 bg-slate-950 border-slate-700"
-                />
-                <span>Compare Straight Baseline</span>
-              </label>
-            </div>
+            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-400 hover:text-slate-200 select-none">
+              <input
+                type="checkbox"
+                checked={showDirectBaseline}
+                onChange={(e) => setShowDirectBaseline(e.target.checked)}
+                className="rounded accent-rose-500 bg-slate-950 border-slate-700"
+              />
+              <span>Compare Direct Baseline</span>
+            </label>
           </div>
 
-          {/* Mobile Quick Action to Switch to Directives */}
+          {/* Mobile: switch to planner */}
           <div className="block lg:hidden">
             <button
               onClick={() => setMobileTab('planner')}
               className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 font-semibold text-xs flex items-center justify-center gap-2 transition"
             >
-              <span>View Route Controls & Turn Directives</span>
+              <span>Open Route Controls & Directives</span>
               <Navigation className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Planner Column (Right 5 Cols on desktop, or toggled on mobile) */}
-        <div className={`space-y-4 lg:col-span-5 ${mobileTab === 'planner' ? 'block' : 'hidden lg:block'}`}>
-          {/* Mobile Quick Action to Switch back to Map */}
-          <div className="block lg:hidden">
+        {/* Planner Column — 5 cols, sticky */}
+        <div className={`lg:col-span-5 lg:sticky lg:top-4 ${mobileTab === 'planner' ? 'block' : 'hidden lg:block'}`}>
+          {/* Mobile: back to map */}
+          <div className="block lg:hidden mb-3">
             <button
               onClick={() => setMobileTab('map')}
               className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center justify-center gap-2 transition"
             >
-              <span>← Return to Interactive Map</span>
+              <span>← Back to Map</span>
             </button>
           </div>
 
