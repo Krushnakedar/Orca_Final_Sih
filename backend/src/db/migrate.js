@@ -16,7 +16,23 @@ async function runMigrations() {
     ssl: { rejectUnauthorized: false },
   });
 
-  const client = await pool.connect();
+  let client;
+  try {
+    client = await pool.connect();
+  } catch (err) {
+    await pool.end();
+    if (err.code === 'ENOTFOUND' || err.code === 'EAI_AGAIN') {
+      throw new Error(
+        'Database host could not be resolved. Set SUPABASE_DB_URL to the connection string from Supabase Dashboard > Connect > Session pooler, then rerun the migration.'
+      );
+    }
+    if (err.code === '28P01') {
+      throw new Error(
+        'Database password authentication failed. Reset the database password in Supabase Dashboard > Project Settings > Database, URL-encode special characters, update SUPABASE_DB_URL, and rerun the migration.'
+      );
+    }
+    throw err;
+  }
 
   try {
     await client.query("BEGIN");
