@@ -6,9 +6,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate', // Changed from 'prompt' to automatically update
-      devOptions: { enabled: true }, // Changed to true so it works in npm run dev
-      injectRegister: 'auto',
+      registerType: 'prompt', // Keep this if you want to control updates manually
+      injectRegister: null,   // We will register it manually in main.jsx
+      devOptions: { 
+        enabled: false // Keep false. We will use `npm run build && npm run preview` to test SW
+      },
       includeAssets: [
         'offline.html',
         'icon-192.png',
@@ -17,8 +19,7 @@ export default defineConfig({
       manifest: {
         name: 'ORCA - Marine Intelligence Platform',
         short_name: 'ORCA',
-        description:
-          'Marine intelligence, weather, ocean, PFZ, routing and alerts for coastal operators.',
+        description: 'Marine intelligence, weather, ocean, PFZ, routing and alerts for coastal operators.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
@@ -34,12 +35,13 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Ensure sw.js and the workbox runtime files are generated
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/auth\//],
         cleanupOutdatedCaches: true,
-        skipWaiting: true, // Recommended for autoUpdate
-        clientsClaim: true, // Recommended for autoUpdate
+        skipWaiting: false,
+        clientsClaim: false,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -59,8 +61,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern:
-              /\/api\/(map\/layers|geospatial\/zones|risk\/thresholds|agents\/architecture|routes\/waypoints|sources)/,
+            urlPattern: /\/api\/(map\/layers|geospatial\/zones|risk\/thresholds|agents\/architecture|routes\/waypoints|sources)/,
             handler: 'NetworkFirst',
             method: 'GET',
             options: {

@@ -13,3 +13,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>
 );
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // VitePWA generates 'sw.js' in the root directory
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('ORCA Service Worker registered successfully:', registration.scope);
+      })
+      .catch((error) => {
+        console.error('ORCA Service Worker registration failed:', error);
+      });
+  });
+}
