@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
-      devOptions: { enabled: false },
+      registerType: 'autoUpdate', // Changed from 'prompt' to automatically update
+      devOptions: { enabled: true }, // Changed to true so it works in npm run dev
       injectRegister: 'auto',
       includeAssets: [
         'offline.html',
@@ -38,8 +38,8 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/auth\//],
         cleanupOutdatedCaches: true,
-        skipWaiting: false,
-        clientsClaim: false,
+        skipWaiting: true, // Recommended for autoUpdate
+        clientsClaim: true, // Recommended for autoUpdate
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
