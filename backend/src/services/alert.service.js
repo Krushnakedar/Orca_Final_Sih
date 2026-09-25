@@ -344,6 +344,16 @@ class AlertService {
     return null;
   }
 
+  static unacknowledgeAlert(alertId) {
+    let alert = simulatedAlerts.find(a => a.id === alertId) || liveAlertsCache.find(a => a.id === alertId);
+    if (alert) {
+      alert.status = 'ACTIVE';
+      delete alert.acknowledgedAt;
+      return alert;
+    }
+    return null;
+  }
+
   static simulateScenario(scenario) {
     if (scenario === 'EMERGENCY_CYCLONE') {
       return this.createAlert({

@@ -1,20 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  BellRing,
   ShieldAlert,
   Radio,
-  AlertTriangle,
-  Waves,
-  MapPin,
-  RefreshCw,
-  Info
+  PhoneCall,
+  ExternalLink,
+  LifeBuoy
 } from 'lucide-react';
 import AlertFeed from '../features/alerts/AlertFeed';
 import StaleBadge from '../components/StaleBadge';
 
 export default function AlertsPage() {
-  const [alertCount, setAlertCount] = useState(5);
-
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -24,7 +19,8 @@ export default function AlertsPage() {
             <h1 className="text-2xl font-bold text-white tracking-tight">
               Safety Alerts & Emergency Operations Center
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-950 border border-rose-800 text-rose-300 font-medium">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-950 border border-rose-800 text-rose-300 font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
               Broadcast Active
             </span>
             <StaleBadge url="/alerts" params={{ sector: 'all', status: 'ACTIVE' }} />
@@ -34,70 +30,122 @@ export default function AlertsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-          <span>VHF Priority: <strong>Channel 16 Active</strong></span>
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+          <Radio className="w-3.5 h-3.5 text-tealAccent-400 animate-pulse" />
+          <span>VHF Priority: <strong className="text-white">Channel 16 Active</strong></span>
         </div>
       </div>
 
       {/* Main Grid: Alert Feed (8 Cols) + Emergency Protocol Guidelines (4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 8 Cols: Full Feature Alert Feed */}
+        {/* Left 8 Cols: Full Feature Alert Feed with Auto-Advance & History */}
         <div className="lg:col-span-8 space-y-4">
           <AlertFeed />
         </div>
 
-        {/* Right 4 Cols: Emergency Protocol Guidelines */}
+        {/* Right 4 Cols: Emergency Protocol Guidelines & Distress Frequencies */}
         <div className="lg:col-span-4 space-y-4">
-          {/* Emergency Protocols Card */}
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3 shadow-lg">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-800 text-slate-200">
+          {/* Emergency Distress Contacts Card */}
+          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3.5 shadow-xl">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-800 text-slate-200">
+              <PhoneCall className="w-4 h-4 text-tealAccent-400" />
+              <h3 className="font-bold text-xs uppercase tracking-wider">
+                Emergency Distress Frequencies
+              </h3>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[11px] text-slate-400">VHF International Marine Distress</span>
+                <div className="font-bold font-mono text-white text-sm flex items-center justify-between">
+                  <span>Channel 16</span>
+                  <span className="text-xs text-tealAccent-400 font-normal">156.800 MHz</span>
+                </div>
+              </div>
+
+              <a
+                href="tel:1554"
+                className="p-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-200 block space-y-1 transition group"
+              >
+                <span className="text-[11px] text-slate-400 group-hover:text-slate-300">Indian Coast Guard Toll-Free</span>
+                <div className="font-bold font-mono text-rose-400 text-sm flex items-center justify-between">
+                  <span>Emergency 1554</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                </div>
+              </a>
+
+              <a
+                href="tel:+912224388065"
+                className="p-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-200 block space-y-1 transition group"
+              >
+                <span className="text-[11px] text-slate-400 group-hover:text-slate-300">MRCC Mumbai (Search & Rescue)</span>
+                <div className="font-bold font-mono text-slate-200 text-xs flex items-center justify-between">
+                  <span>+91-22-24388065</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                </div>
+              </a>
+
+              <a
+                href="tel:+914023895000"
+                className="p-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-200 block space-y-1 transition group"
+              >
+                <span className="text-[11px] text-slate-400 group-hover:text-slate-300">INCOIS Ocean Warning Helpline</span>
+                <div className="font-bold font-mono text-slate-200 text-xs flex items-center justify-between">
+                  <span>+91-40-23895000</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Emergency Response Tiers Card */}
+          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3.5 shadow-xl">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-800 text-slate-200">
               <ShieldAlert className="w-4 h-4 text-rose-400" />
               <h3 className="font-bold text-xs uppercase tracking-wider">
                 Maritime Emergency Response Tiers
               </h3>
             </div>
 
-            <div className="space-y-2.5 text-xs text-slate-300 leading-relaxed">
-              <div className="p-2.5 rounded-xl bg-red-950/40 border border-red-800/60 space-y-1">
-                <div className="font-bold text-red-300">Tier 1: Red Alert / Emergency</div>
-                <p className="text-[11px] text-slate-400">Total sea venturing ban. All vessels moored. Hoist Warning Signal 4.</p>
+            <div className="space-y-2.5 text-xs leading-relaxed">
+              <div className="p-3 rounded-xl bg-red-950/40 border border-red-800/60 space-y-1">
+                <div className="font-bold text-red-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span>Tier 1: Red Alert / Emergency</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Total sea venturing ban. All vessels moored. Hoist Warning Signal 4.
+                </p>
               </div>
-              <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 space-y-1">
-                <div className="font-bold text-amber-300">Tier 2: Orange Warning</div>
-                <p className="text-[11px] text-slate-400">Squally sea chop (&gt; 2.5m waves). Small artisanal craft abort departure.</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-yellow-950/40 border border-yellow-800/60 space-y-1">
-                <div className="font-bold text-yellow-300">Tier 3: Yellow Watch</div>
-                <p className="text-[11px] text-slate-400">Developing thunderstorm cells or high tidal surge. Maintain VHF watch.</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-sky-950/40 border border-sky-800/60 space-y-1">
-                <div className="font-bold text-sky-300">Tier 4: Coastal Advisory</div>
-                <p className="text-[11px] text-slate-400">Normal operations with seasonal current cautions.</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Search & Rescue Coordinates */}
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3 shadow-lg">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-800 text-slate-200">
-              <Radio className="w-4 h-4 text-tealAccent-400" />
-              <h3 className="font-bold text-xs uppercase tracking-wider">
-                Emergency Distress Frequencies
-              </h3>
-            </div>
+              <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 space-y-1">
+                <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>Tier 2: Orange Warning</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Squally chop (&gt; 2.5m waves). Small artisanal craft abort departure.
+                </p>
+              </div>
 
-            <div className="space-y-1.5 text-xs">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-slate-400">VHF International Distress:</span>
-                <span className="font-bold font-mono text-slate-200">Channel 16 (156.8 MHz)</span>
+              <div className="p-3 rounded-xl bg-yellow-950/40 border border-yellow-800/60 space-y-1">
+                <div className="font-bold text-yellow-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                  <span>Tier 3: Yellow Watch</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Developing thunderstorm cells or tidal surge. Maintain VHF watch.
+                </p>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-slate-400">Coast Guard MRCC Mumbai:</span>
-                <span className="font-bold font-mono text-slate-200">1554 / +91-22-24388065</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-slate-400">INCOIS Coastal Helpline:</span>
-                <span className="font-bold font-mono text-slate-200">+91-40-23895000</span>
+
+              <div className="p-3 rounded-xl bg-sky-950/40 border border-sky-800/60 space-y-1">
+                <div className="font-bold text-sky-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span>Tier 4: Coastal Advisory</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Normal operations with seasonal coastal current cautions.
+                </p>
               </div>
             </div>
           </div>
