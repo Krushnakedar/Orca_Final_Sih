@@ -31,8 +31,17 @@ const QUEUEABLE = [
       message: 'Alert acknowledged (queued — will sync when online)',
     }),
     maxAttempts: 8,
-    // Backoff schedule in milliseconds; last entry is used for all
-    // subsequent retries until maxAttempts is exhausted.
+    backoffMs: [5_000, 15_000, 60_000, 300_000, 900_000, 1_800_000],
+  },
+  {
+    method: 'post',
+    path: /^\/alerts\/unacknowledge\/?$/,
+    synthesize: (body) => ({
+      success: true,
+      data: { id: body?.id, status: 'ACTIVE', _queuedOffline: true },
+      message: 'Alert restored to active (queued — will sync when online)',
+    }),
+    maxAttempts: 8,
     backoffMs: [5_000, 15_000, 60_000, 300_000, 900_000, 1_800_000],
   },
 ];

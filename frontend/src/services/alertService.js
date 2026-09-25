@@ -18,6 +18,10 @@ export const alertService = {
     return await api.post('/alerts/acknowledge', { id });
   },
 
+  async unacknowledgeAlert(id) {
+    return await api.post('/alerts/unacknowledge', { id });
+  },
+
   async simulateAlert(scenario) {
     return await api.post('/alerts/simulate', { scenario });
   }

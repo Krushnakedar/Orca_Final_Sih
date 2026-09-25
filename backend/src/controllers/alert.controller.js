@@ -49,6 +49,27 @@ const acknowledgeAlert = (req, res, next) => {
   }
 };
 
+const unacknowledgeAlert = (req, res, next) => {
+  try {
+    const { id } = req.body;
+    const alert = AlertService.unacknowledgeAlert(id);
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        message: 'Alert not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: alert,
+      message: 'Alert restored to active'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const simulateAlert = (req, res, next) => {
   try {
     const { scenario } = req.body;
@@ -68,5 +89,6 @@ module.exports = {
   getAlerts,
   createAlert,
   acknowledgeAlert,
+  unacknowledgeAlert,
   simulateAlert
 };
