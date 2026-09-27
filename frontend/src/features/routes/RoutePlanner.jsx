@@ -539,7 +539,6 @@ export default function RoutePlanner({
             </div>
           )}
 
-<<<<<<< HEAD
           {/* ── Recommendation Reasoning ── */}
           <div className="rounded-xl bg-slate-900 border border-amber-800/50 overflow-hidden">
             <div className="px-4 py-3 bg-amber-950/20 border-b border-amber-800/40 flex items-center gap-2">
@@ -583,8 +582,6 @@ export default function RoutePlanner({
             </div>
           </div>
 
-=======
->>>>>>> refs/remotes/origin/testing121
           {/* ── Recommended Route Card ── */}
           <div className="rounded-xl bg-slate-900 border border-cyan-700/60 shadow-lg overflow-hidden">
             <div className="px-4 py-3 bg-cyan-950/30 border-b border-cyan-800/40 flex items-center justify-between">
