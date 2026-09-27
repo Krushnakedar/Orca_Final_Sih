@@ -1,0 +1,48 @@
+ORCA Feature Patch — Currents, Swell, Marine Heat Wave, SVAS
+=============================================================
+
+HOW TO APPLY
+------------
+1. Download orca_features_patch.zip
+2. Unzip it. Paths inside are relative to project root, e.g.:
+   new/Orca_Final_Sih/backend/src/...
+3. Copy the files into your local Orca_Final_Sih project,
+   preserving the same folder structure under backend/ and frontend/.
+
+   Example (from the folder that contains Orca_Final_Sih):
+
+   unzip orca_features_patch.zip
+   cp -R new/Orca_Final_Sih/backend/src/*  ./Orca_Final_Sih/backend/src/
+   cp -R new/Orca_Final_Sih/frontend/src/* ./Orca_Final_Sih/frontend/src/
+
+   Or merge file-by-file if you already changed some of these files.
+
+NEW FILES (create if missing)
+-----------------------------
+backend/src/engine/rules/CurrentRule.js
+backend/src/engine/rules/SwellRule.js
+backend/src/engine/rules/MarineHeatWaveRule.js
+backend/src/engine/rules/VesselAdvisoryRule.js
+backend/src/services/mhw.service.js
+backend/src/services/svas.service.js
+
+MODIFIED FILES
+--------------
+backend/src/engine/thresholds.js
+backend/src/engine/RiskEngine.js
+backend/src/providers/ocean/RealOpenMeteoOceanProvider.js
+backend/src/providers/ocean/MockOceanProvider.js
+backend/src/services/advisory.service.js
+backend/src/controllers/map.controller.js
+backend/src/routes/map.routes.js
+frontend/src/pages/MapPage.jsx
+frontend/src/features/map/MarineMap.jsx
+frontend/src/services/mapService.js
+
+VERIFY
+------
+cd backend && node --check src/engine/RiskEngine.js
+cd frontend && npm run dev
+Open Marine Map → toggles for Currents, Swell, MHW, SVAS
+
+Route planning algorithm remains A* (marineRouting.service.js).

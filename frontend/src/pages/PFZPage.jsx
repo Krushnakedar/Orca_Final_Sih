@@ -26,6 +26,7 @@ const SECTORS = [
   { name: 'Kochi Harbor', lat: 9.9312, lon: 76.2673, state: 'Kerala / Arabian Sea' },
   { name: 'Chennai Offshore', lat: 13.0827, lon: 80.2707, state: 'Tamil Nadu / Bay of Bengal' },
   { name: 'Visakhapatnam', lat: 17.6868, lon: 83.2185, state: 'Andhra Pradesh / Bay of Bengal' },
+  { name: 'Porbandar', lat: 21.6417, lon: 69.6293, state: 'Gujarat / Northern Arabian Sea' },
 ];
 
 export default function PFZPage() {

@@ -1,8 +1,5 @@
 const GeofenceService = require("../services/geofence.service");
 const RoutePlanningService = require("../services/route.service");
-const oceanService = require("../services/ocean.service");
-const weatherService = require("../services/weather.service");
-const svasService = require("../services/svas.service");
 
 // Unified, accurate GeoJSON datasets for Indian Coastal & Offshore waters
 const getMapLayers = (req, res) => {
@@ -202,81 +199,118 @@ const getMapLayers = (req, res) => {
   });
 };
 
+const mhwService = require('../services/mhw.service');
+const svasService = require('../services/svas.service');
+const oceanService = require('../services/ocean.service');
+
+/**
+ * Currents + swell sample points for map vectors (Open-Meteo / mock).
+ * GET /map/ocean-field?lat=&lon=&span=
+ */
 const getOceanField = async (req, res) => {
-  const lat = Number(req.query.lat ?? 18.922);
-  const lon = Number(req.query.lon ?? 72.8347);
-  const requestedSpan = Number(req.query.span ?? 5);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-    return res.status(400).json({ success: false, error: "A valid latitude and longitude are required." });
-  }
+  try {
+    const centerLat = parseFloat(req.query.lat) || 15.5;
+    const centerLon = parseFloat(req.query.lon) || 75.0;
+    const span = Math.min(8, Math.max(1, parseFloat(req.query.span) || 4));
+    const step = span / 3;
 
-  const span = Math.min(8, Math.max(1, Number.isFinite(requestedSpan) ? requestedSpan : 5));
-  const offsets = [-span / 2, 0, span / 2];
-  const samples = await Promise.all(offsets.flatMap(dLat => offsets.map(async dLon => {
-    const sampleLat = lat + dLat;
-    const sampleLon = lon + dLon;
-    try {
-      const [oceanResult, weatherResult] = await Promise.allSettled([
-        oceanService.getOceanConditions({ lat: sampleLat, lon: sampleLon }),
-        weatherService.getWeather({ lat: sampleLat, lon: sampleLon }),
-      ]);
-      if (oceanResult.status === "rejected" && weatherResult.status === "rejected") return null;
-      const data = oceanResult.status === "fulfilled" ? (oceanResult.value?.data || oceanResult.value) : {};
-      const weather = weatherResult.status === "fulfilled" ? (weatherResult.value?.data || weatherResult.value) : {};
-      const windFrom = Number(weather.windDirectionDegrees);
-      return {
-        type: "Feature",
-        properties: {
-          currentSpeedMps: data.current?.speedMps ?? null,
-          currentDirectionDegrees: data.current?.directionDegrees ?? null,
-          swellHeightM: data.swellHeightM ?? data.swell?.heightM ?? null,
-          swellDirectionDegrees: data.swellDirectionDegrees ?? data.swell?.directionDegrees ?? null,
-          swellPeriodSec: data.swellPeriodSec ?? data.swell?.periodSec ?? null,
-          significantWaveHeightM: data.significantWaveHeightM ?? null,
-          seaSurfaceTemperatureC: data.seaSurfaceTemperatureC ?? null,
-          windSpeedKmh: weather.windSpeedKmh ?? null,
-          windFromDirectionDegrees: Number.isFinite(windFrom) ? windFrom : null,
-          windFlowDirectionDegrees: Number.isFinite(windFrom) ? (windFrom + 180) % 360 : null,
-          observationTime: data.observationTime ?? null,
-        },
-        geometry: { type: "Point", coordinates: [sampleLon, sampleLat] },
-      };
-    } catch {
-      return null;
+    const points = [];
+    for (let dLat = -span / 2; dLat <= span / 2 + 1e-6; dLat += step) {
+      for (let dLon = -span / 2; dLon <= span / 2 + 1e-6; dLon += step) {
+        const lat = centerLat + dLat;
+        const lon = centerLon + dLon;
+        // Skip deep inland samples roughly
+        if (lon > 72 && lon < 85 && lat > 10 && lat < 24 && Math.abs(lon - 78) < 4 && lat > 15) {
+          continue;
+        }
+        try {
+          const result = await oceanService.getOceanConditions({ lat, lon });
+          const data = result.data || result;
+          points.push({
+            type: 'Feature',
+            properties: {
+              currentSpeedMps: data.current?.speedMps ?? null,
+              currentDirectionDegrees: data.current?.directionDegrees ?? null,
+              swellHeightM: data.swellHeightM ?? data.swell?.heightM ?? null,
+              swellDirectionDegrees: data.swellDirectionDegrees ?? data.swell?.directionDegrees ?? null,
+              swellPeriodSec: data.swellPeriodSec ?? data.swell?.periodSec ?? null,
+              significantWaveHeightM: data.significantWaveHeightM ?? null,
+              seaSurfaceTemperatureC: data.seaSurfaceTemperatureC ?? null,
+            },
+            geometry: { type: 'Point', coordinates: [lon, lat] },
+          });
+        } catch (_) {
+          /* skip failed cell */
+        }
+      }
     }
-  })));
-  const features = samples.filter(Boolean);
-  if (!features.length) {
-    return res.status(503).json({ success: false, error: "Ocean data is currently unavailable for this region." });
-  }
 
-  return res.status(200).json({
-    success: true,
-    data: {
-      type: "FeatureCollection",
-      features,
-      metadata: { center: { lat, lon }, span, generatedAt: new Date().toISOString() },
-    },
-    message: "Ocean field retrieved",
-  });
+    return res.status(200).json({
+      success: true,
+      data: { type: 'FeatureCollection', features: points },
+      message: 'Ocean field (currents + swell) samples retrieved',
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 };
 
-const getSvasLayer = (req, res) => {
-  const day = Number(req.query.day ?? 1);
-  const boatLengthM = Number(req.query.boatLengthM ?? 6);
-  if (!Number.isInteger(day) || day < 1 || day > 3 || !Number.isFinite(boatLengthM) || boatLengthM <= 0) {
-    return res.status(400).json({ success: false, error: "Day must be 1-3 and boat length must be positive." });
+/**
+ * Marine Heat Wave overlay
+ * GET /map/mhw
+ */
+const getMhwLayer = async (req, res) => {
+  try {
+    const grid = await mhwService.getMapGrid();
+    let point = null;
+    if (req.query.lat && req.query.lon) {
+      point = await mhwService.getPointAssessment({
+        lat: req.query.lat,
+        lon: req.query.lon,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: { grid, point },
+      message: 'Marine Heat Wave layer retrieved',
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
+};
 
-  const lat = Number(req.query.lat ?? 18.922);
-  const lon = Number(req.query.lon ?? 72.8347);
-  const layers = svasService.getMapLayers({ day, boatLengthM });
-  const advice = svasService.getAdvice({ lat, lon, day, boatLengthM });
-  return res.status(200).json({ success: true, data: { layers, advice }, message: "SVAS layer retrieved" });
+/**
+ * Small Vessel Advisory Service polygons
+ * GET /map/svas?day=1&boatLengthM=6
+ */
+const getSvasLayer = async (req, res) => {
+  try {
+    const day = parseInt(req.query.day, 10) || 1;
+    const boatLengthM = parseFloat(req.query.boatLengthM) || 6;
+    const layers = svasService.getMapLayers({ day, boatLengthM });
+    let advice = null;
+    if (req.query.lat && req.query.lon) {
+      advice = svasService.getAdvice({
+        lat: req.query.lat,
+        lon: req.query.lon,
+        boatLengthM,
+        day,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: { layers, advice },
+      message: 'SVAS layer retrieved',
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 module.exports = {
   getMapLayers,
   getOceanField,
+  getMhwLayer,
   getSvasLayer,
 };
+

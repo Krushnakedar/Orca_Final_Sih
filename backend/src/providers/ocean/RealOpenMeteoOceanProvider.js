@@ -10,7 +10,7 @@ class RealOpenMeteoOceanProvider extends BaseProvider {
     const lat = parseFloat(location?.lat ?? 18.922);
     const lon = parseFloat(location?.lon ?? 72.8347);
 
-    const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period,wind_wave_height,ocean_current_velocity,ocean_current_direction,sea_surface_temperature`;
+    const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period,wind_wave_height,ocean_current_velocity,ocean_current_direction,sea_surface_temperature,swell_wave_height,swell_wave_direction,swell_wave_period`;
 
     const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (!res.ok) {
@@ -65,8 +65,22 @@ class RealOpenMeteoOceanProvider extends BaseProvider {
       wavePeriodSec: cur.wave_period || 7.2,
       waveDirectionDegrees: waveDir,
       waveDirectionCardinal: getCardinalDirection(waveDir),
-      swellHeightM: parseFloat((waveHeight * 0.7).toFixed(2)),
-      swellPeriodSec: (cur.wave_period || 7.2) + 2.0,
+      swellHeightM: Number.isFinite(cur.swell_wave_height)
+        ? parseFloat(cur.swell_wave_height.toFixed(2))
+        : parseFloat((waveHeight * 0.7).toFixed(2)),
+      swellPeriodSec: Number.isFinite(cur.swell_wave_period)
+        ? parseFloat(cur.swell_wave_period.toFixed(1))
+        : (cur.wave_period || 7.2) + 2.0,
+      swellDirectionDegrees: cur.swell_wave_direction ?? waveDir,
+      swell: {
+        heightM: Number.isFinite(cur.swell_wave_height)
+          ? parseFloat(cur.swell_wave_height.toFixed(2))
+          : parseFloat((waveHeight * 0.7).toFixed(2)),
+        periodSec: Number.isFinite(cur.swell_wave_period)
+          ? parseFloat(cur.swell_wave_period.toFixed(1))
+          : (cur.wave_period || 7.2) + 2.0,
+        directionDegrees: cur.swell_wave_direction ?? waveDir,
+      },
       tide: {
         type: "Semi-diurnal",
         currentPhase: "Ebb Tide (Falling)",
