@@ -127,4 +127,4 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
     </>
   );
 }
-
+
