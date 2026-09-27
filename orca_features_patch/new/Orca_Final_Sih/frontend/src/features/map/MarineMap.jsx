@@ -32,6 +32,8 @@ import {
 
 const GIS_LAYERS = [
   ["pfz", "PFZ Pelagic Zones", "#34d399", "#10b981"],
+  ["mhw", "Marine Heat Wave", "#fde047", "#eab308"],
+  ["svas", "Small Vessel Advisory", "#22c55e", "#16a34a"],
   ["chlorophyll", "Chlorophyll Intensity", "#a855f7", "#7e22ce"],
   ["protected", "Marine Protected Areas (MPAs)", "#10b981", "#065f46"],
   ["restricted", "Naval Restricted Zones", "#f43f5e", "#881337"],
@@ -281,6 +283,15 @@ export default function MarineMap({
 
   const getStyleForLayer = (feature) => {
     const layerType = feature.properties?.layerType;
+    const propColor = feature.properties?.color;
+    if (propColor && (layerType === "MHW" || feature.properties?.category || feature.properties?.status)) {
+      return {
+        color: propColor,
+        weight: 1.5,
+        fillColor: propColor,
+        fillOpacity: 0.3,
+      };
+    }
     if (layerType === "MPA") {
       return {
         color: "#10b981",
@@ -385,7 +396,6 @@ export default function MarineMap({
           ))}
         </LayersControl>}
         {baseTiles && baseTiles}
-        {extraOverlays}
 
         {/* Dynamic GeoJSON Layers */}
         {layersData?.features && (
@@ -721,6 +731,7 @@ export default function MarineMap({
             </Popup>
           </Marker>
         )}
+              {extraOverlays}
       </MapContainer>
 
       {/* Floating Interactive Map Legend & Symbols Box */}

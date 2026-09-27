@@ -3,6 +3,7 @@ const GeofenceService = require('./geofence.service');
 const MarineRoutingService = require('./marineRouting.service');
 const WeatherService = require('./weather.service');
 const OceanService = require('./ocean.service');
+const PFZService = require('./pfz.service');
 
 const HARBORS_REGISTRY = [
   { id: 'mumbai_sassoon_dock', name: 'Sassoon Dock, Mumbai', state: 'Maharashtra', coordinates: [18.9167, 72.8250], sector: 'Mumbai Coast' },
@@ -95,6 +96,15 @@ const ROUTE_TEMPLATES = [
   }
 ];
 
+const PFZ_DESTINATION_CONFIG = {
+  mumbai_pfz_alpha: { sector: 'Mumbai Coast', zoneIndex: 0 },
+  mumbai_deep_shelf: { sector: 'Mumbai Coast', zoneIndex: 1 },
+  kochi_pfz_chavakkad: { sector: 'Kochi Harbor', zoneIndex: 0 },
+  chennai_pfz_coromandel: { sector: 'Chennai Offshore', zoneIndex: 0 },
+  vizag_pfz_bengal: { sector: 'Visakhapatnam', zoneIndex: 0 },
+  porbandar_pfz_kutch: { sector: 'Porbandar', zoneIndex: 0 }
+};
+
 // Helper: Haversine distance in km
 const getHaversineKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -114,6 +124,62 @@ const getBearingDegrees = (lat1, lon1, lat2, lon2) => {
   const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
             Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
   return Math.round((Math.atan2(y, x) * 180 / Math.PI + 360) % 360);
+};
+
+const findNearestHarbor = (coordinates) => {
+  return HARBORS_REGISTRY.reduce((nearest, harbor) => {
+    const distanceKm = getHaversineKm(
+      coordinates[0], coordinates[1],
+      harbor.coordinates[0], harbor.coordinates[1]
+    );
+    return !nearest || distanceKm < nearest.distanceKm
+      ? { harbor, distanceKm }
+      : nearest;
+  }, null);
+};
+
+const getPFZLineCoordinate = (geometry) => {
+  if (!geometry?.coordinates) return null;
+  const coordinates = geometry.type === 'LineString'
+    ? geometry.coordinates
+    : geometry.type === 'MultiLineString'
+      ? geometry.coordinates.flat()
+      : [];
+  const coordinate = coordinates[Math.floor(coordinates.length / 2)];
+  return Array.isArray(coordinate) && coordinate.length >= 2
+    ? [Number(coordinate[1]), Number(coordinate[0])]
+    : null;
+};
+
+const resolvePFZDestination = async (destinationId, fallback) => {
+  const config = PFZ_DESTINATION_CONFIG[destinationId];
+  if (!config) return fallback;
+
+  try {
+    const response = await PFZService.getPFZs({ sectorName: config.sector });
+    const zones = response?.data?.zones || [];
+    const zone = zones[config.zoneIndex] || zones[0];
+    if (!zone) return fallback;
+
+    const lineCoordinate = getPFZLineCoordinate(zone.geometry);
+    const coordinates = lineCoordinate || (
+      Number.isFinite(zone.centerLat) && Number.isFinite(zone.centerLon)
+        ? [zone.centerLat, zone.centerLon]
+        : null
+    );
+    if (!coordinates) return fallback;
+
+    return {
+      ...fallback,
+      coordinates,
+      name: zone.name || fallback.name,
+      pfzId: zone.id,
+      pfzSource: response.source?.dataset || 'INCOIS PFZ advisory'
+    };
+  } catch (error) {
+    console.warn(`PFZ destination lookup failed for ${destinationId}:`, error.message);
+    return fallback;
+  }
 };
 
 const auditRouteGeofences = (coordinates) => {
@@ -216,15 +282,34 @@ class RoutePlanningService {
       destName = `Target Coordinates (${destCoord[0].toFixed(3)}°N, ${destCoord[1].toFixed(3)}°E)`;
     }
 
-    // 2.5 Smart Coastal & Water Validation: Snap land-based GPS fixes or coastal points to safe sea lane
-    const originSnap = MarineRoutingService.snapToNavigableWater([originCoord[1], originCoord[0]]);
-    if (originSnap.wasSnapped) {
-      originCoord = [originSnap.coordinates[1], originSnap.coordinates[0]];
-      if (isLiveOrigin) {
-        originName = `Live Vessel GPS (Snapped to Coastal Fix: ${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
-      } else {
-        originName = `${originName} (Navigable Fix: ${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
+    if (typeof destination === 'string') {
+      const configuredDestination = PFZ_DESTINATION_CONFIG[destination];
+      if (configuredDestination) {
+        const resolvedDestination = await resolvePFZDestination(destination, {
+          id: destination,
+          name: destName,
+          coordinates: destCoord
+        });
+        destCoord = resolvedDestination.coordinates;
+        destName = resolvedDestination.name;
       }
+    }
+
+    // 2.5 Smart Coastal & Water Validation: Snap land-based GPS fixes or coastal points to safe sea lane
+    const liveOriginIsOnLand = isLiveOrigin && MarineRoutingService.pointIsOnLand([originCoord[1], originCoord[0]]);
+    const liveOriginCoordinates = [...originCoord];
+    let nearestLiveDock = null;
+    let marineOriginCoord = [...originCoord];
+
+    if (liveOriginIsOnLand) {
+      nearestLiveDock = findNearestHarbor(originCoord);
+      marineOriginCoord = [...nearestLiveDock.harbor.coordinates];
+    }
+
+    const originSnap = MarineRoutingService.snapToNavigableWater([originCoord[1], originCoord[0]]);
+    if (originSnap.wasSnapped && !isLiveOrigin) {
+      originCoord = [originSnap.coordinates[1], originSnap.coordinates[0]];
+      originName = `${originName} (Navigable Fix: ${originCoord[0].toFixed(3)}°N, ${originCoord[1].toFixed(3)}°E)`;
     }
 
     const destSnap = MarineRoutingService.snapToNavigableWater([destCoord[1], destCoord[0]]);
@@ -336,10 +421,11 @@ class RoutePlanningService {
 
     const marineRoute = await MarineRoutingService.getSeaRoute({
       // MarineRoutingService uses GeoJSON [longitude, latitude]
-      origin: [originCoord[1], originCoord[0]],
+      origin: [marineOriginCoord[1], marineOriginCoord[0]],
       destination: [destCoord[1], destCoord[0]],
       vesselProfile,
-      cruisingSpeedKnots: cruisingSpeed
+      cruisingSpeedKnots: cruisingSpeed,
+      preserveOrigin: false
     });
 
     const marineCoordinates = marineRoute?.geometry?.coordinates;
@@ -450,6 +536,20 @@ class RoutePlanningService {
         coordinates: originCoord,
         isLive: isLiveOrigin
       },
+      ...(nearestLiveDock ? {
+        landToDockRoute: {
+          type: 'LAND_TO_DOCK_CONNECTOR',
+          label: `Live GPS to ${nearestLiveDock.harbor.name}`,
+          coordinates: [liveOriginCoordinates, nearestLiveDock.harbor.coordinates],
+          distanceKm: parseFloat(nearestLiveDock.distanceKm.toFixed(1)),
+          distanceNm: parseFloat((nearestLiveDock.distanceKm / 1.852).toFixed(1)),
+          dock: {
+            id: nearestLiveDock.harbor.id,
+            name: nearestLiveDock.harbor.name,
+            coordinates: nearestLiveDock.harbor.coordinates
+          }
+        }
+      } : {}),
       destination: {
         name: destName,
         coordinates: destCoord

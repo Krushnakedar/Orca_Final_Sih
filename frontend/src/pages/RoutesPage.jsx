@@ -14,6 +14,7 @@ import {
 import MarineMap from '../features/map/MarineMap';
 import RoutePlanner from '../features/routes/RoutePlanner';
 import { mapService } from '../services/mapService';
+import { providerService } from '../services/providerService';
 import StaleBadge from '../components/StaleBadge';
 import ApiError from '../components/ApiError';
 
@@ -49,9 +50,56 @@ export default function RoutesPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await mapService.getLayers(selectedSector);
-      if (res?.data) {
-        setLayersData(res.data);
+      const [mapResponse, pfzResponse] = await Promise.all([
+        mapService.getLayers(selectedSector),
+        providerService.getPFZs(undefined, undefined, selectedSector).catch((pfzError) => {
+          console.warn('Official PFZ geometry unavailable for route planner:', pfzError);
+          return null;
+        })
+      ]);
+
+      const baseLayers = mapResponse?.data || mapResponse;
+      const pfzPayload = pfzResponse?.data;
+      const officialPfz = pfzPayload?.geojson || (Array.isArray(pfzPayload?.zones)
+        ? {
+            type: 'FeatureCollection',
+            features: pfzPayload.zones.filter(zone => zone.geometry).map(zone => ({
+              type: 'Feature',
+              id: zone.id,
+              properties: {
+                name: zone.name,
+                confidence: zone.confidenceRatingPct,
+                recommendation: zone.recommendationLabel
+              },
+              geometry: zone.geometry
+            }))
+          }
+        : null);
+      const chlorophyll = {
+        type: 'FeatureCollection',
+        features: (pfzPayload?.zones || [])
+          .filter(zone => Number.isFinite(zone.centerLat) && Number.isFinite(zone.centerLon))
+          .map(zone => ({
+            type: 'Feature',
+            id: `chlorophyll_${zone.id}`,
+            properties: {
+              name: `${zone.name || 'PFZ'} chlorophyll intensity`,
+              chlorophyllMgM3: zone.chlorophyllConcentrationMgM3,
+              layerType: 'CHLOROPHYLL'
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: [zone.centerLon, zone.centerLat]
+            }
+          }))
+      };
+
+      if (baseLayers) {
+        setLayersData({
+          ...baseLayers,
+          pfz: officialPfz || { type: 'FeatureCollection', features: [] },
+          chlorophyll
+        });
       }
     } catch (err) {
       console.error('Error fetching map layers for route planner:', err);
@@ -204,6 +252,7 @@ export default function RoutesPage() {
               heightClassName="h-[340px] sm:h-[420px] md:h-[500px] lg:h-[580px] xl:h-[650px]"
               compact={false}
               routePlan={currentPlan}
+              showOfficialLayers
               selectionMode={selectionMode}
               onMapPick={handleMapPick}
               showDirectBaseline={showDirectBaseline}

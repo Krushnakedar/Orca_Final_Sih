@@ -519,7 +519,8 @@ class MarineRoutingService {
     origin,
     destination: dest,
     vesselProfile = {},
-    cruisingSpeedKnots = 12
+    cruisingSpeedKnots = 12,
+    preserveOrigin = false
   }) {
     if (!Array.isArray(origin) || origin.length !== 2) {
       throw new Error('Invalid origin coordinates [lon, lat]');
@@ -529,7 +530,9 @@ class MarineRoutingService {
     }
 
     // Smart snap if either endpoint is onshore or inside a restricted zone
-    const originSnap = this.snapToNavigableWater(origin);
+    const originSnap = preserveOrigin
+      ? { coordinates: origin, wasSnapped: false }
+      : this.snapToNavigableWater(origin);
     const destSnap = this.snapToNavigableWater(dest);
     const effectiveOrigin = originSnap.coordinates;
     const effectiveDest = destSnap.coordinates;

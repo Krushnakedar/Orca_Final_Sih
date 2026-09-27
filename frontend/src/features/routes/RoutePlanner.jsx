@@ -61,9 +61,14 @@ export default function RoutePlanner({
   const [liveLocation, setLiveLocation] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsMessage, setGpsMessage] = useState(null);
+  const [gpsResolved, setGpsResolved] = useState(false);
+  const gpsRequestStartedRef = useRef(false);
 
   // Debounce timer ref to avoid hammering the API on every slider move
   const debounceRef = useRef(null);
+
+  // Debounce timer ref to avoid hammering the API on every slider move
+  //const debounceRef = useRef(null);
 
   // 1. Fetch Harbors, Destinations & Route Templates on Mount
   useEffect(() => {
@@ -94,9 +99,14 @@ export default function RoutePlanner({
 
   // 2. Handle Live Location Geolocation API
   const handleGetLiveLocation = () => {
+    if (gpsRequestStartedRef.current) return;
+    gpsRequestStartedRef.current = true;
+
     if (!navigator.geolocation) {
       setGpsMessage({ type: 'warning', text: 'Geolocation not supported. Using demo coastal fix (Mumbai offshore).' });
       activateSimulatedGPS();
+      setGpsResolved(true);
+      gpsRequestStartedRef.current = false;
       return;
     }
 
@@ -117,10 +127,14 @@ export default function RoutePlanner({
           type: 'success',
           text: `GPS Fix: ${coords.lat.toFixed(4)}°N, ${coords.lon.toFixed(4)}°E (±${coords.accuracy}m)`
         });
+        setGpsResolved(true);
+        gpsRequestStartedRef.current = false;
       },
       (err) => {
         console.warn('Geolocation failed:', err.message);
         setGpsLoading(false);
+        setGpsResolved(true);
+        gpsRequestStartedRef.current = false;
         if (err.code === 1) {
           setGpsMessage({
             type: 'error',
@@ -146,6 +160,12 @@ export default function RoutePlanner({
     setGpsLoading(false);
     setGpsMessage({ type: 'info', text: 'Demo Fix: 18.9220°N, 72.8347°E (Mumbai Offshore — simulated)' });
   };
+
+  // Request a real fix before the initial automatic route calculation.
+  useEffect(() => {
+    handleGetLiveLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClearLiveLocation = () => {
     setIsUsingLiveLocation(false);
@@ -213,13 +233,14 @@ export default function RoutePlanner({
 
   // Debounced auto-recalculate when key inputs change
   useEffect(() => {
+    if (!gpsResolved) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       handlePlanRoute();
     }, 600);
     return () => clearTimeout(debounceRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrigin, selectedDestination, customOrigin, customDestination, isUsingLiveLocation, liveLocation, vesselType, cruisingSpeed]);
+  }, [selectedOrigin, selectedDestination, customOrigin, customDestination, isUsingLiveLocation, liveLocation, vesselType, cruisingSpeed, gpsResolved]);
 
   // Quick Apply Pre-determined Corridor Template
   const handleApplyTemplate = (tpl) => {
@@ -517,6 +538,49 @@ export default function RoutePlanner({
               </div>
             </div>
           )}
+
+          {/* ── Recommendation Reasoning ── */}
+          <div className="rounded-xl bg-slate-900 border border-amber-800/50 overflow-hidden">
+            <div className="px-4 py-3 bg-amber-950/20 border-b border-amber-800/40 flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-400" />
+              <span className="font-bold text-amber-300 text-xs">Why This Route Is Recommended</span>
+            </div>
+            <div className="p-4 space-y-2 text-[11px] text-slate-300 leading-relaxed">
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  It follows the navigational network and is clear of restricted zones, while the straight-line baseline
+                  {direct?.hazardBreaches > 0 ? ` breaches ${direct.hazardBreaches} restricted area${direct.hazardBreaches > 1 ? 's' : ''}.` : ' does not guarantee navigational clearance.'}
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
+                <span>
+                  The recommended risk score is <strong className="text-emerald-300">{proposed?.riskScore}/100</strong> versus <strong className="text-rose-300">{direct?.riskScore}/100</strong> for the straight-line baseline.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Waves className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                <span>
+                  It limits maximum swell exposure to <strong className="text-cyan-300">{proposed?.maxWaveExposureM}m</strong>, compared with <strong className="text-slate-200">{direct?.maxWaveExposureM}m</strong> on the direct baseline.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <ArrowRight className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  The safety trade-off is a {proposed?.detourAdditionalNm ?? 0} NM detour, adding approximately {proposed?.detourAdditionalMinutes ?? 0} minutes at the selected vessel speed.
+                </span>
+              </div>
+              {plan.landToDockRoute && (
+                <div className="flex items-start gap-2 pt-2 border-t border-slate-800/80">
+                  <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    Your GPS fix is on land, so the route first connects to {plan.landToDockRoute.dock?.name} before entering the maritime network.
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* ── Recommended Route Card ── */}
           <div className="rounded-xl bg-slate-900 border border-cyan-700/60 shadow-lg overflow-hidden">
