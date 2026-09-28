@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Compass,
   Fish,
@@ -28,6 +28,73 @@ const SECTORS = [
   { name: 'Visakhapatnam', lat: 17.6868, lon: 83.2185, state: 'Andhra Pradesh / Bay of Bengal' },
   { name: 'Porbandar', lat: 21.6417, lon: 69.6293, state: 'Gujarat / Northern Arabian Sea' },
 ];
+
+/**
+ * Horizontal auto-scrolling carousel.
+ * - Advances one card every `intervalMs`.
+ * - At the end, smoothly loops back to the first card.
+ * - Manual wheel / touch / drag / keyboard input pauses auto-scroll,
+ *   which resumes `resumeDelayMs` after the last interaction.
+ * - `resetKey` returns the track to the first card when the sector changes.
+ */
+function AutoScrollCarousel({ children, resetKey, intervalMs = 4000, resumeDelayMs = 3000 }) {
+  const trackRef = useRef(null);
+  const pausedRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+
+  const pauseAutoScroll = useCallback(() => {
+    pausedRef.current = true;
+    clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      pausedRef.current = false;
+    }, resumeDelayMs);
+  }, [resumeDelayMs]);
+
+  // Jump back to the first card when the data set changes
+  useEffect(() => {
+    const el = trackRef.current;
+    if (el) el.scrollTo({ left: 0 });
+  }, [resetKey]);
+
+  // Auto-advance timer
+  useEffect(() => {
+    const id = setInterval(() => {
+      const el = trackRef.current;
+      if (!el || pausedRef.current) return;
+      if (el.scrollWidth <= el.clientWidth + 4) return; // everything already visible
+
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+      if (atEnd) {
+        el.scrollTo({ left: 0, behavior: 'smooth' }); // loop back to first card
+      } else {
+        const first = el.firstElementChild;
+        const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+        const step = first ? first.offsetWidth + gap : el.clientWidth;
+        el.scrollBy({ left: step, behavior: 'smooth' });
+      }
+    }, intervalMs);
+
+    return () => {
+      clearInterval(id);
+      clearTimeout(resumeTimerRef.current);
+    };
+  }, [intervalMs]);
+
+  return (
+    <div
+      ref={trackRef}
+      onWheel={pauseAutoScroll}
+      onTouchStart={pauseAutoScroll}
+      onTouchMove={pauseAutoScroll}
+      onPointerDown={pauseAutoScroll}
+      onKeyDown={pauseAutoScroll}
+      tabIndex={0}
+      className="flex flex-nowrap gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 items-stretch focus:outline-none [scrollbar-width:thin]"
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function PFZPage() {
   const [selectedSector, setSelectedSector] = useState(SECTORS[0]);
@@ -71,6 +138,7 @@ export default function PFZPage() {
 
   return (
     <div className="space-y-6">
+      {/* ===== HEADER (unchanged) ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -119,6 +187,7 @@ export default function PFZPage() {
         </div>
       </div>
 
+      {/* ===== SUMMARY STATS (unchanged) ===== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -163,35 +232,41 @@ export default function PFZPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <Fish className="w-4 h-4 text-emerald-400" />
-              <span>Potential Fishing Zones in {selectedSector.name}</span>
-            </h2>
-            <span className="text-[11px] text-slate-400 font-mono">
-              Composite Model: <strong>INCOIS / CMEMS</strong>
-            </span>
-          </div>
+      {/* ===== PFZ CARDS: HORIZONTAL CAROUSEL ===== */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+            <Fish className="w-4 h-4 text-emerald-400" />
+            <span>Potential Fishing Zones in {selectedSector.name}</span>
+          </h2>
+          <span className="text-[11px] text-slate-400 font-mono">
+            Composite Model: <strong>INCOIS / CMEMS</strong>
+          </span>
+        </div>
 
-          {loading ? (
-            <div className="h-64 flex items-center justify-center bg-slate-900/40 rounded-2xl border border-slate-800">
-              <LoadingSpinner message="Calculating satellite thermal fronts and pelagic zones..." />
-            </div>
-          ) : zones.length === 0 ? (
-            <div className="p-8 text-center bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-400 text-xs">
-              No active thermal fronts detected within 50 km for current timestamp.
-            </div>
-          ) : (
-            zones.map((zone) => (
+        {loading ? (
+          <div className="h-64 flex items-center justify-center bg-slate-900/40 rounded-2xl border border-slate-800">
+            <LoadingSpinner message="Calculating satellite thermal fronts and pelagic zones..." />
+          </div>
+        ) : zones.length === 0 ? (
+          <div className="p-8 text-center bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-400 text-xs">
+            No active thermal fronts detected within 50 km for current timestamp.
+          </div>
+        ) : (
+          <AutoScrollCarousel resetKey={selectedSector.name}>
+            {zones.map((zone) => (
               <div
                 key={zone.id}
-                className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-4 relative overflow-hidden shadow-lg hover:border-slate-700 transition"
+                className="flex-none snap-start
+                           w-[90%]
+                           sm:w-[calc((100%-1rem)/2)]
+                           lg:w-[calc((100%-2rem)/3)]
+                           p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-4
+                           relative overflow-hidden shadow-lg hover:border-slate-700 transition"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                <div className="flex flex-col gap-2 pb-3 border-b border-slate-800">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-semibold">
                         {zone.confidenceRatingPct || 86}% Confidence
                       </span>
@@ -200,7 +275,7 @@ export default function PFZPage() {
                     <h3 className="text-base font-bold text-white mt-1">{zone.name}</h3>
                   </div>
 
-                  <div className="text-right">
+                  <div>
                     <div className="text-xs font-bold text-ocean-400 font-mono">
                       {zone.distanceKm ?? 18.4} km &bull; {zone.bearingDegrees ?? 270}° {zone.bearingCardinal || 'W'}
                     </div>
@@ -208,7 +283,7 @@ export default function PFZPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
                     <span className="text-[10px] text-slate-400">Sea Surface Temp</span>
                     <div className="font-bold text-slate-200 mt-0.5">
@@ -254,26 +329,29 @@ export default function PFZPage() {
 
                 <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
                   <span className="flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-tealAccent-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-tealAccent-400 shrink-0" />
                     <span>Decision Support: Potentially Favourable Zone (No catch guarantee)</span>
                   </span>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </AutoScrollCarousel>
+        )}
+      </section>
+
+      {/* ===== FULL-WIDTH MAP ===== */}
+      <section className="space-y-4 w-full">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+            <Layers className="w-4 h-4 text-ocean-400" />
+            <span>Geospatial PFZ Boundary Preview</span>
+          </h2>
+          <StaleBadge
+            url={`/map/layers?sector=${encodeURIComponent(selectedSector.name)}`}
+          />
         </div>
 
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <Layers className="w-4 h-4 text-ocean-400" />
-              <span>Geospatial PFZ Boundary Preview</span>
-            </h2>
-            <StaleBadge
-              url={`/map/layers?sector=${encodeURIComponent(selectedSector.name)}`}
-            />
-          </div>
-
+        <div className="w-full">
           <MarineMap
             layersData={mapLayers}
             selectedSector={selectedSector.name}
@@ -283,17 +361,18 @@ export default function PFZPage() {
             height="480px"
             compact={true}
           />
-
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2">
-            <div className="flex items-center gap-2 text-slate-200 font-semibold">
-              <Info className="w-4 h-4 text-ocean-400" />
-              <span>Scientific Advisory Disclaimer</span>
-            </div>
-            <p className="leading-relaxed">
-              Potential Fishing Zone (PFZ) advisories are generated by correlating oceanic thermal fronts derived from satellite NOAA/Sentinel AVHRR sensors and chlorophyll concentration from Ocean Color Monitors. PFZs indicate ecological aggregation zones and do not guarantee fish catch.
-            </p>
-          </div>
         </div>
+      </section>
+
+      {/* ===== DISCLAIMER (below map) ===== */}
+      <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2">
+        <div className="flex items-center gap-2 text-slate-200 font-semibold">
+          <Info className="w-4 h-4 text-ocean-400" />
+          <span>Scientific Advisory Disclaimer</span>
+        </div>
+        <p className="leading-relaxed">
+          Potential Fishing Zone (PFZ) advisories are generated by correlating oceanic thermal fronts derived from satellite NOAA/Sentinel AVHRR sensors and chlorophyll concentration from Ocean Color Monitors. PFZs indicate ecological aggregation zones and do not guarantee fish catch.
+        </p>
       </div>
     </div>
   );
