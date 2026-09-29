@@ -89,68 +89,68 @@ export default function DataSourcesPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Data Provider Architecture</h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-medium">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Data Provider Architecture</h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-success-surface border border-success/30 text-success font-medium">
               Active
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Decoupled data provider contracts, abstraction layers, and fallback registries
           </p>
         </div>
 
         <button
           onClick={loadSources}
-          className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-slate-200 transition"
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-secondary hover:bg-surface-tertiary border border-border rounded-xl text-xs text-foreground transition"
         >
-          <RefreshCw className={`w-3.5 h-3.5 text-ocean-400 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 text-primary ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Providers</span>
         </button>
       </div>
 
       {/* Provider Architecture Schematic Card */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-navy-900 to-slate-950 border border-slate-800 shadow-xl space-y-4">
+      <div className="p-5 rounded-2xl bg-surface border border-border shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-ocean-400" />
-            <h2 className="font-bold text-slate-100 text-sm">Provider Decoupling Pipeline</h2>
+            <Cpu className="w-5 h-5 text-primary" />
+            <h2 className="font-bold text-foreground text-sm">Provider Decoupling Pipeline</h2>
           </div>
-          <span className="text-xs font-mono text-slate-400">Strict Interface Compliance</span>
+          <span className="text-xs font-mono text-muted-foreground">Strict Interface Compliance</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center text-xs">
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] uppercase font-mono text-ocean-400 font-bold">Layer 1</span>
-            <div className="font-bold text-slate-200">UI / Dashboard</div>
-            <p className="text-[10px] text-slate-500">React Frontend Components</p>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono text-primary font-bold">Layer 1</span>
+            <div className="font-bold text-foreground">UI / Dashboard</div>
+            <p className="text-[10px] text-muted-foreground">React Frontend Components</p>
           </div>
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] uppercase font-mono text-ocean-400 font-bold">Layer 2</span>
-            <div className="font-bold text-slate-200">Backend Services</div>
-            <p className="text-[10px] text-slate-500">Business Logic & Verification</p>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono text-primary font-bold">Layer 2</span>
+            <div className="font-bold text-foreground">Backend Services</div>
+            <p className="text-[10px] text-muted-foreground">Business Logic & Verification</p>
           </div>
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] uppercase font-mono text-ocean-400 font-bold">Layer 3</span>
-            <div className="font-bold text-slate-200">Provider Interface</div>
-            <p className="text-[10px] text-slate-500">IWeather, IOcean, IPFZs</p>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono text-primary font-bold">Layer 3</span>
+            <div className="font-bold text-foreground">Provider Interface</div>
+            <p className="text-[10px] text-muted-foreground">IWeather, IOcean, IPFZs</p>
           </div>
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] uppercase font-mono text-tealAccent-400 font-bold">Layer 4</span>
-            <div className="font-bold text-slate-200">Mock / Real Satellite</div>
-            <p className="text-[10px] text-slate-500">INCOIS, IMD, Sentinel-3</p>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono text-accent font-bold">Layer 4</span>
+            <div className="font-bold text-foreground">Mock / Real Satellite</div>
+            <p className="text-[10px] text-muted-foreground">INCOIS, IMD, Sentinel-3</p>
           </div>
         </div>
       </div>
 
       {/* 5 Registered Provider Cards */}
       <div>
-        <h3 className="font-bold text-slate-200 text-sm mb-3">Registered Data Providers ({sourcesInfo?.registeredProvidersCount || 5})</h3>
+        <h3 className="font-bold text-foreground text-sm mb-3">Registered Data Providers ({sourcesInfo?.registeredProvidersCount || 5})</h3>
         
         {loading && !sourcesInfo ? (
-          <div className="h-40 flex items-center justify-center bg-slate-900/40 rounded-2xl border border-slate-800">
+          <div className="h-40 flex items-center justify-center bg-surface-secondary/40 rounded-2xl border border-border">
             <LoadingSpinner message="Querying provider registry..." />
           </div>
         ) : (
@@ -160,32 +160,32 @@ export default function DataSourcesPage() {
               return (
                 <div
                   key={provider.domain}
-                  className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3 relative overflow-hidden"
+                  className="p-5 rounded-2xl bg-surface border border-border space-y-3 relative overflow-hidden shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-ocean-950 border border-ocean-800 text-ocean-400">
+                      <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
                         <IconComponent className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-100 text-xs uppercase tracking-wide">
+                        <h4 className="font-bold text-foreground text-xs uppercase tracking-wide">
                           {provider.domain} Provider
                         </h4>
-                        <span className="text-[10px] font-mono text-slate-500">v{provider.version}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground">v{provider.version}</span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-semibold">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-success-surface border border-success/30 text-success font-semibold">
                       {provider.status}
                     </span>
                   </div>
 
                   <div className="space-y-1 text-xs">
-                    <div className="text-slate-200 font-mono text-[11px] truncate">
+                    <div className="text-foreground font-mono text-[11px] truncate font-medium">
                       {provider.name}
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
-                      <span>Mode: <strong className="text-amber-400 font-mono">{provider.isMock ? 'Demo Data' : 'Live Feed'}</strong></span>
-                      <span>Latency: <strong className="text-tealAccent-400 font-mono">{provider.latencyMs}ms</strong></span>
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border">
+                      <span>Mode: <strong className="text-warning font-mono">{provider.isMock ? 'Demo Data' : 'Live Feed'}</strong></span>
+                      <span>Latency: <strong className="text-accent font-mono">{provider.latencyMs}ms</strong></span>
                     </div>
                   </div>
                 </div>
@@ -196,26 +196,26 @@ export default function DataSourcesPage() {
       </div>
 
       {/* Live Provider Query Sandbox */}
-      <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-5 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div className="p-6 rounded-2xl bg-surface border border-border space-y-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-tealAccent-400" />
-            <h3 className="font-bold text-slate-100 text-sm">Provider Query Sandbox</h3>
+            <Terminal className="w-5 h-5 text-accent" />
+            <h3 className="font-bold text-foreground text-sm">Provider Query Sandbox</h3>
           </div>
 
           {/* Sector Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">Target Sector:</span>
+            <span className="text-xs text-muted-foreground">Target Sector:</span>
             <select
               value={selectedSector.name}
               onChange={(e) => {
                 const sec = SECTORS.find((s) => s.name === e.target.value) || SECTORS[0];
                 setSelectedSector(sec);
               }}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-medium focus:outline-none"
+              className="bg-surface-secondary border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-medium focus:outline-none"
             >
               {SECTORS.map((s) => (
-                <option key={s.name} value={s.name}>
+                <option key={s.name} value={s.name} className="bg-surface text-foreground">
                   {s.name} ({s.state})
                 </option>
               ))}
@@ -231,8 +231,8 @@ export default function DataSourcesPage() {
               onClick={() => setActiveQueryDomain(domain)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
                 activeQueryDomain === domain
-                  ? 'bg-ocean-600 text-white shadow-md'
-                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-surface-secondary text-muted-foreground hover:text-foreground border border-border'
               }`}
             >
               {domain} Provider
@@ -242,16 +242,16 @@ export default function DataSourcesPage() {
 
         {/* Query Response Viewer */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Query Payload & Evidence Audit:</span>
             {queryResult?.source && (
-              <span className="font-mono text-[11px] text-ocean-300">
+              <span className="font-mono text-[11px] text-primary">
                 Dataset: {queryResult.source.dataset}
               </span>
             )}
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/90 font-mono text-xs text-slate-300 overflow-x-auto max-h-[340px]">
+          <div className="p-4 rounded-xl bg-surface-secondary border border-border font-mono text-xs text-foreground overflow-x-auto max-h-[340px]">
             {queryLoading ? (
               <div className="py-8 flex items-center justify-center">
                 <LoadingSpinner size="sm" message="Executing provider retrieval..." />

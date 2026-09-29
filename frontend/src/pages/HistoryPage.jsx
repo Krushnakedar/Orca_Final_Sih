@@ -63,17 +63,17 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               Activity History & Audit Log
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-800 text-indigo-300 font-medium">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium">
               Active
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Your marine safety queries and application activity
           </p>
         </div>
@@ -83,18 +83,18 @@ export default function HistoryPage() {
           <a
             href={traceService.getExportUrl()}
             download
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition"
+            className="px-3.5 py-2 rounded-xl bg-surface-secondary hover:bg-surface-tertiary border border-border text-foreground text-xs font-semibold flex items-center gap-1.5 transition"
           >
-            <Download className="w-3.5 h-3.5 text-ocean-400" />
+            <Download className="w-3.5 h-3.5 text-primary" />
             <span>Export Audit Log (JSON)</span>
           </a>
 
           <button
             onClick={fetchHistory}
-            className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 transition"
+            className="p-2 bg-surface-secondary hover:bg-surface-tertiary border border-border rounded-xl text-foreground transition"
             title="Refresh Trace Stream"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-ocean-400 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-primary ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
@@ -104,21 +104,21 @@ export default function HistoryPage() {
         {/* Left 7 Cols: Trace History Log Table */}
         <div className="lg:col-span-7 space-y-3">
           {/* Search & Filter Bar */}
-          <div className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          <div className="p-3.5 rounded-2xl bg-surface border border-border flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-sm">
             <form onSubmit={handleSearch} className="flex-1 min-w-[200px] flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search traces by query text or ID..."
-                  className="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-ocean-500"
+                  className="w-full pl-8 pr-3 py-1.5 bg-surface-secondary border border-border rounded-lg text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:border-primary"
                 />
               </div>
               <button
                 type="submit"
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-xs transition"
+                className="px-3 py-1.5 bg-surface-secondary hover:bg-surface-tertiary border border-border text-foreground rounded-lg font-semibold text-xs transition"
               >
                 Search
               </button>
@@ -128,7 +128,7 @@ export default function HistoryPage() {
               <select
                 value={selectedSector}
                 onChange={(e) => setSelectedSector(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-surface-secondary border border-border text-foreground text-xs focus:outline-none cursor-pointer"
               >
                 <option value="All">All Sectors</option>
                 <option value="Mumbai Coast">Mumbai Coast</option>
@@ -140,7 +140,7 @@ export default function HistoryPage() {
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-surface-secondary border border-border text-foreground text-xs focus:outline-none cursor-pointer"
               >
                 <option value="ALL">All Languages</option>
                 <option value="en">English (EN)</option>
@@ -151,16 +151,16 @@ export default function HistoryPage() {
           </div>
 
           {/* Trace Records Table */}
-          <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-950">
+          <div className="rounded-2xl border border-border overflow-hidden bg-surface shadow-sm">
             {traces.length === 0 ? (
-              <div className="p-10 text-center text-slate-500 text-xs space-y-1">
-                <p className="font-semibold text-slate-400">No activity yet</p>
+              <div className="p-10 text-center text-muted-foreground text-xs space-y-1">
+                <p className="font-semibold text-foreground">No activity yet</p>
                 <p>Your marine safety queries and application activity will appear here.</p>
               </div>
             ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-900 text-slate-400 border-b border-slate-800 font-mono text-[10px] uppercase">
+                <thead className="bg-surface-secondary text-muted-foreground border-b border-border font-mono text-[10px] uppercase">
                   <tr>
                     <th className="py-2.5 px-3">User Query</th>
                     <th className="py-2.5 px-3">Sector</th>
@@ -170,7 +170,7 @@ export default function HistoryPage() {
                     <th className="py-2.5 px-3">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-sans text-[11px]">
+                <tbody className="divide-y divide-border font-sans text-[11px]">
                   {traces.map((t) => {
                     const isSelected = selectedTrace?.traceId === t.traceId;
                     return (
@@ -178,27 +178,27 @@ export default function HistoryPage() {
                         key={t.traceId}
                         onClick={() => setSelectedTrace(t)}
                         className={`cursor-pointer transition ${
-                          isSelected ? 'bg-ocean-950/60 border-l-2 border-ocean-500' : 'hover:bg-slate-900/60'
+                          isSelected ? 'bg-primary/10 border-l-2 border-primary' : 'hover:bg-surface-secondary/70'
                         }`}
                       >
-                        <td className="py-2.5 px-3 text-slate-200 font-medium truncate max-w-[170px]">
+                        <td className="py-2.5 px-3 text-foreground font-medium truncate max-w-[170px]">
                           {t.query}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
                           {t.sector}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[10px] text-cyan-400 uppercase">
+                        <td className="py-2.5 px-3 font-mono text-[10px] text-primary uppercase">
                           {t.language}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-tealAccent-400 font-semibold whitespace-nowrap">
+                        <td className="py-2.5 px-3 font-mono text-accent font-semibold whitespace-nowrap">
                           {t.overallDurationMs} ms
                         </td>
                         <td className="py-2.5 px-3 whitespace-nowrap">
                           <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full border ${
-                            t.riskCalculated?.level === 'CRITICAL' ? 'bg-red-950 border-red-800 text-red-300' :
-                            t.riskCalculated?.level === 'HIGH' ? 'bg-rose-950 border-rose-800 text-rose-300' :
-                            t.riskCalculated?.level === 'MODERATE' ? 'bg-amber-950 border-amber-800 text-amber-300' :
-                            'bg-emerald-950 border-emerald-800 text-emerald-300'
+                            t.riskCalculated?.level === 'CRITICAL' ? 'bg-danger-surface border-danger/30 text-danger' :
+                            t.riskCalculated?.level === 'HIGH' ? 'bg-danger-surface border-danger/30 text-danger' :
+                            t.riskCalculated?.level === 'MODERATE' ? 'bg-warning-surface border-warning/30 text-warning' :
+                            'bg-success-surface border-success/30 text-success'
                           }`}>
                             {t.riskCalculated?.score}/100
                           </span>
@@ -209,10 +209,10 @@ export default function HistoryPage() {
                               e.stopPropagation();
                               setSelectedTrace(t);
                             }}
-                            className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition"
+                            className="p-1 rounded-lg bg-surface-secondary hover:bg-surface-tertiary border border-border text-foreground transition"
                             title="View details"
                           >
-                            <Eye className="w-3.5 h-3.5 text-ocean-400" />
+                            <Eye className="w-3.5 h-3.5 text-primary" />
                           </button>
                         </td>
                       </tr>

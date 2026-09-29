@@ -98,32 +98,32 @@ export default function MapPage() {
 
   return (
     <div className="marine-map-page space-y-6">
-      <div className="marine-map-header flex flex-col justify-between gap-4 pb-3 border-b border-slate-800">
+      <div className="marine-map-header flex flex-col justify-between gap-4 pb-3 border-b border-border">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Marine GIS & Geofencing Command Center</h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-medium">Live weather & ocean safety</span>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Marine GIS &amp; Geofencing Command Center</h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-success-surface border border-success/30 text-success font-medium">Live weather &amp; ocean safety</span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">Live weather and ocean conditions for the point you select on the map</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Live weather and ocean conditions for the point you select on the map</p>
         </div>
 
         <div className="marine-map-controls flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs text-slate-300">
-            <MapPin className="w-3.5 h-3.5 text-ocean-400 shrink-0" />
-            <span className="text-slate-400">Sector:</span>
-            <select value={selectedSector} onChange={e => changeSector(e.target.value)} className="min-w-0 bg-transparent font-semibold text-slate-100 focus:outline-none cursor-pointer">
-              <option value="Mumbai Coast" className="bg-slate-900 text-slate-100">Arabian Sea / Mumbai Coast</option>
-              <option value="Kochi Harbor" className="bg-slate-900 text-slate-100">Arabian Sea / Kochi Harbor</option>
-              <option value="Chennai Offshore" className="bg-slate-900 text-slate-100">Bay of Bengal / Chennai Coast</option>
-              <option value="Visakhapatnam" className="bg-slate-900 text-slate-100">Bay of Bengal / Visakhapatnam</option>
-              <option value="Porbandar" className="bg-slate-900 text-slate-100">Gujarat / Porbandar & Kutch</option>
+          <div className="min-w-0 flex items-center gap-2 bg-surface border border-border px-3 py-1.5 rounded-xl text-xs text-foreground">
+            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="text-muted-foreground">Sector:</span>
+            <select value={selectedSector} onChange={e => changeSector(e.target.value)} className="min-w-0 bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer">
+              <option value="Mumbai Coast" className="bg-surface text-foreground">Arabian Sea / Mumbai Coast</option>
+              <option value="Kochi Harbor" className="bg-surface text-foreground">Arabian Sea / Kochi Harbor</option>
+              <option value="Chennai Offshore" className="bg-surface text-foreground">Bay of Bengal / Chennai Coast</option>
+              <option value="Visakhapatnam" className="bg-surface text-foreground">Bay of Bengal / Visakhapatnam</option>
+              <option value="Porbandar" className="bg-surface text-foreground">Gujarat / Porbandar &amp; Kutch</option>
             </select>
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex max-w-full flex-wrap items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1" role="group" aria-label="Map overlay">
+        <div className="flex max-w-full flex-wrap items-center gap-1 rounded-lg border border-border bg-surface p-1" role="group" aria-label="Map overlay">
           {[
             ['none', 'None'],
             ['wind', 'Wind'],
@@ -134,19 +134,19 @@ export default function MapPage() {
             ['pfz', 'PFZ'],
           ].map(([value, label]) => <button key={value} type="button" aria-pressed={activeOverlay === value}
             onClick={() => setActiveOverlay(value)}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${activeOverlay === value ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}`}>
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${activeOverlay === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-surface-secondary hover:text-foreground'}`}>
             {label}
           </button>)}
         </div>
         {activeOverlay === 'svas' && <>
-          <div className="ml-2 flex items-center gap-1 text-xs text-slate-400" aria-label="SVAS forecast day">
+          <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground" aria-label="SVAS forecast day">
             <span className="mr-1">Day</span>
             {[1, 2, 3].map(day => <button key={day} type="button" onClick={() => setSvasDay(day)} aria-pressed={svasDay === day}
-              className={`rounded border px-2 py-1 ${svasDay === day ? 'border-cyan-500 bg-cyan-950 text-cyan-100' : 'border-slate-700 hover:border-slate-500'}`}>{day}</button>)}
+              className={`rounded border px-2 py-1 ${svasDay === day ? 'border-info bg-info-surface text-info' : 'border-border hover:border-muted-foreground'}`}>{day}</button>)}
           </div>
-          <label className="flex items-center gap-2 text-xs text-slate-400">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Boat length
-            <select value={boatLengthM} onChange={event => setBoatLengthM(Number(event.target.value))} className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-slate-200">
+            <select value={boatLengthM} onChange={event => setBoatLengthM(Number(event.target.value))} className="rounded border border-border bg-surface px-2 py-1 text-foreground">
               <option value={3.5}>&lt; 4 m</option>
               <option value={5}>&lt; 6 m</option>
               <option value={6.5}>&lt; 7 m</option>
@@ -155,30 +155,30 @@ export default function MapPage() {
             </select>
           </label>
         </>}
-        {activeOverlay !== 'none' && <span className="text-xs text-slate-500" role="status">
+        {activeOverlay !== 'none' && <span className="text-xs text-muted" role="status">
           {['wind', 'currents', 'swell', 'mhw'].includes(activeOverlay)
             ? oceanLoading ? 'Loading ocean data…' : oceanError || `${oceanField?.features?.length || 0} ocean samples`
             : svasLoading ? 'Loading advisory…' : svasError || 'Advisory zones loaded'}
         </span>}
       </div>
-      {activeOverlay === 'mhw' && <p className="text-xs text-amber-200/80">MHW is an SST-anomaly estimate against a simplified 28°C baseline.</p>}
-      {activeOverlay === 'svas' && <p className="text-xs text-amber-200/80">SVAS zones are prototype guidance, not official navigational advice.</p>}
+      {activeOverlay === 'mhw' && <p className="text-xs text-warning">{`MHW is an SST-anomaly estimate against a simplified 28\u00b0C baseline.`}</p>}
+      {activeOverlay === 'svas' && <p className="text-xs text-warning">SVAS zones are prototype guidance, not official navigational advice.</p>}
 
-      <div className="rounded-xl border border-sky-900/80 bg-sky-950/30 px-4 py-3 text-xs text-sky-100">
+      <div className="rounded-xl border border-info/30 bg-info-surface px-4 py-3 text-xs text-info">
         <span className="font-semibold">Live data mode.</span> Official INCOIS overlays are available from the public WebGIS.{' '}
-        <a className="inline-flex items-center gap-1 underline text-sky-300" href="https://incois.gov.in/geoportal/MFASPFZ/index.html" target="_blank" rel="noreferrer">INCOIS PFZ WebGIS <ExternalLink className="h-3 w-3" /></a>.
+        <a className="inline-flex items-center gap-1 underline text-info" href="https://incois.gov.in/geoportal/MFASPFZ/index.html" target="_blank" rel="noreferrer">INCOIS PFZ WebGIS <ExternalLink className="h-3 w-3" /></a>.
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className={`rounded-full border px-2 py-1 ${pfzLoading ? 'border-slate-700 text-slate-400' : pfzError ? 'border-amber-800 bg-amber-950 text-amber-200' : pfz?.source?.isFallback ? 'border-yellow-800 bg-yellow-950 text-yellow-200' : 'border-emerald-800 bg-emerald-950 text-emerald-200'}`}>
+        <span className={`rounded-full border px-2 py-1 ${pfzLoading ? 'border-border text-muted-foreground' : pfzError ? 'border-warning/30 bg-warning-surface text-warning' : pfz?.source?.isFallback ? 'border-warning/30 bg-warning-surface text-warning' : 'border-success/30 bg-success-surface text-success'}`}>
           {pfzLoading ? 'Loading INCOIS PFZ…' : pfzError ? 'Official INCOIS PFZ unavailable' : pfz?.source?.isFallback ? 'INCOIS PFZ fallback (demo zones)' : `INCOIS PFZ live · ${pfz?.data?.zoneCount || 0} lines · advisory ${formatAdvisoryDate(pfz?.source?.advisoryDate)}`}
         </span>
-        {pfzError && <span className="text-slate-400">No PFZ geometry is shown until a current official response is available. ({pfzError})</span>}
-        {pfz?.source?.isFallback && <span className="text-yellow-400/70">{pfz.source.notice}</span>}
+        {pfzError && <span className="text-muted-foreground">No PFZ geometry is shown until a current official response is available. ({pfzError})</span>}
+        {pfz?.source?.isFallback && <span className="text-warning/70">{pfz.source.notice}</span>}
       </div>
 
       <div className="marine-map-grid grid gap-6">
         <div className="min-w-0 space-y-4">
-          <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-2xl bg-slate-950">
+          <div className="rounded-2xl border border-border overflow-hidden shadow-2xl bg-background">
             <MarineMap layersData={mapLayers} onPointSelect={setPoint} safety={reading} selectedSector={selectedSector} showDemoLayers={false} visibleLayers={activeOverlay === 'pfz' ? ['pfz'] : []} height="clamp(420px, 68vh, 680px)"
               extraOverlays={<OceanOverlays oceanField={oceanField} svasLayers={svasData?.layers} activeOverlay={activeOverlay} />}
               baseTiles={<TileLayer
@@ -188,14 +188,14 @@ export default function MapPage() {
               />}
             />
           </div>
-          <p className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 text-xs text-slate-400">Click the map to request live weather and ocean conditions. The dotted circle is a weather-risk reading, not a navigational boundary.</p>
+          <p className="rounded-xl border border-border bg-surface/60 p-3.5 text-xs text-muted-foreground">Click the map to request live weather and ocean conditions. The dotted circle is a weather-risk reading, not a navigational boundary.</p>
         </div>
         <div className="min-w-0 space-y-4">
           <WeatherSafety point={point} sector={selectedSector} reading={reading} onReading={setReading} />
-          {activeOverlay === 'svas' && svasData?.advice && <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-200">
-            <h2 className="mb-2 flex items-center gap-2 font-medium text-slate-100"><Anchor size={15} className="text-cyan-400" />Vessel advisory · Day {svasData.advice.day}</h2>
+          {activeOverlay === 'svas' && svasData?.advice && <section className="rounded-xl border border-border bg-surface/70 p-4 text-sm text-foreground">
+            <h2 className="mb-2 flex items-center gap-2 font-medium text-foreground"><Anchor size={15} className="text-info" />Vessel advisory · Day {svasData.advice.day}</h2>
             <p>{svasData.advice.adviceText}</p>
-            <p className="mt-2 text-xs text-slate-500">{svasData.advice.zoneName} · selected boat {boatLengthM} m · {svasData.advice.status}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{svasData.advice.zoneName} · selected boat {boatLengthM} m · {svasData.advice.status}</p>
           </section>}
         </div>
       </div>

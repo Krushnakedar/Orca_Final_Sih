@@ -15,15 +15,15 @@ export default function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-200">
-      <Globe className="w-3.5 h-3.5 text-ocean-400 shrink-0" />
+    <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl px-2.5 py-1 text-xs text-foreground">
+      <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
       <select
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
-        className="bg-transparent font-semibold text-slate-100 focus:outline-none cursor-pointer text-xs"
+        className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer text-xs"
       >
         {LANGUAGES.map((lang) => (
-          <option key={lang.code} value={lang.code} className="bg-slate-900 text-slate-100">
+          <option key={lang.code} value={lang.code} className="bg-surface text-foreground">
             {lang.flag} {lang.nativeLabel} ({lang.label})
           </option>
         ))}

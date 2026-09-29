@@ -20,6 +20,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { OfflineProvider } from "./context/OfflineContext";
 import { PendingActionProvider } from "./context/PendingActionContext";
 import { SyncProvider } from "./context/SyncContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { checkHealth } from "./services/healthService";
 
 export default function App() {
@@ -67,13 +68,14 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <OfflineProvider>
-        <PendingActionProvider>
-          <AuthProvider>
-            <SyncProvider>
-              <LanguageProvider>
-                <BrowserRouter>
-                  <MainLayout apiStatus={apiStatus}>
+      <ThemeProvider>
+        <OfflineProvider>
+          <PendingActionProvider>
+            <AuthProvider>
+              <SyncProvider>
+                <LanguageProvider>
+                  <BrowserRouter>
+                    <MainLayout apiStatus={apiStatus}>
                     <Routes>
                       <Route
                         path="/"
@@ -161,6 +163,7 @@ export default function App() {
           </AuthProvider>
         </PendingActionProvider>
       </OfflineProvider>
-    </ErrorBoundary>
+    </ThemeProvider>
+  </ErrorBoundary>
   );
 }

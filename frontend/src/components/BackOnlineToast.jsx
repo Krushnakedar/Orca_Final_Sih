@@ -21,12 +21,12 @@ export default function BackOnlineToast() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-tealAccent-600/40 bg-slate-900 text-slate-100 shadow-2xl px-4 py-3 text-sm"
+      className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-accent/40 bg-surface text-foreground shadow-2xl px-4 py-3 text-sm"
     >
-      <div className="font-semibold text-tealAccent-400 mb-1">
+      <div className="font-semibold text-accent mb-1">
         You're back online
       </div>
-      <div className="text-slate-300 text-xs">
+      <div className="text-muted-foreground text-xs">
         {isSyncing
           ? `Syncing ${pending} queued action${pending === 1 ? '' : 's'}…`
           : failed > 0
@@ -35,7 +35,7 @@ export default function BackOnlineToast() {
       </div>
       <button
         onClick={() => setVisible(false)}
-        className="mt-2 text-[11px] text-slate-400 hover:text-slate-200 transition"
+        className="mt-2 text-[11px] text-muted-foreground hover:text-foreground transition"
       >
         Dismiss
       </button>

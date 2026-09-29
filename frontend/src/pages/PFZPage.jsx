@@ -138,39 +138,39 @@ export default function PFZPage() {
 
   return (
     <div className="space-y-6">
-      {/* ===== HEADER (unchanged) ===== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+      {/* ===== HEADER ===== */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               PFZ Intelligence & Pelagic Zones
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-medium">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-success-surface border border-success/30 text-success font-medium">
               Satellite Integration Active
             </span>
             <StaleBadge
               url={`/pfz?lat=${selectedSector.lat}&lon=${selectedSector.lon}`}
             />
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Oceansat & Sentinel-3 thermal gradient boundaries correlated with marine upwelling chlorophyll indices
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs text-slate-300">
-            <MapPin className="w-3.5 h-3.5 text-ocean-400 shrink-0" />
-            <span className="text-slate-400">Sector:</span>
+          <div className="flex items-center gap-2 bg-surface-secondary border border-border px-3 py-1.5 rounded-xl text-xs text-foreground">
+            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="text-muted-foreground">Sector:</span>
             <select
               value={selectedSector.name}
               onChange={(e) => {
                 const s = SECTORS.find((sec) => sec.name === e.target.value) || SECTORS[0];
                 setSelectedSector(s);
               }}
-              className="bg-transparent font-semibold text-slate-100 focus:outline-none cursor-pointer text-xs"
+              className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer text-xs"
             >
               {SECTORS.map((sec) => (
-                <option key={sec.name} value={sec.name} className="bg-slate-900 text-slate-100">
+                <option key={sec.name} value={sec.name} className="bg-surface text-foreground">
                   {sec.name}
                 </option>
               ))}
@@ -179,77 +179,77 @@ export default function PFZPage() {
 
           <button
             onClick={fetchPFZTelemetry}
-            className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 transition"
+            className="p-2 bg-surface-secondary hover:bg-surface-tertiary border border-border rounded-xl text-foreground transition"
             title="Refresh PFZ Telemetry"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-ocean-400 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-primary ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* ===== SUMMARY STATS (unchanged) ===== */}
+      {/* ===== SUMMARY STATS ===== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-2xl bg-surface border border-border space-y-1 shadow-sm">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Active Identified PFZs
           </span>
-          <div className="text-2xl font-black text-emerald-400">
+          <div className="text-2xl font-black text-success">
             {zones.length} Zones
           </div>
-          <p className="text-[10px] text-slate-500">Thermal front gradient &gt; 0.08°C/km</p>
+          <p className="text-[10px] text-muted-foreground">Thermal front gradient &gt; 0.08°C/km</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-2xl bg-surface border border-border space-y-1 shadow-sm">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Nearest Zone Distance
           </span>
-          <div className="text-2xl font-black text-slate-100">
-            {zones[0]?.distanceKm ?? (zones.length > 0 ? 18.4 : '--')} <span className="text-sm font-normal text-slate-400">km</span>
+          <div className="text-2xl font-black text-foreground">
+            {zones[0]?.distanceKm ?? (zones.length > 0 ? 18.4 : '--')} <span className="text-sm font-normal text-muted-foreground">km</span>
           </div>
-          <p className="text-[10px] text-ocean-400 font-semibold">Bearing {zones[0]?.bearingDegrees ?? 265}° ({zones[0]?.bearingCardinal || 'W'})</p>
+          <p className="text-[10px] text-primary font-semibold">Bearing {zones[0]?.bearingDegrees ?? 265}° ({zones[0]?.bearingCardinal || 'W'})</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-2xl bg-surface border border-border space-y-1 shadow-sm">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             SST & Chlorophyll Composite
           </span>
-          <div className="text-2xl font-black text-tealAccent-400">
+          <div className="text-2xl font-black text-accent">
             {zones[0]?.seaSurfaceTempC ? `${zones[0].seaSurfaceTempC}°C` : (oceanData?.data?.seaSurfaceTemperatureC ? `${oceanData.data.seaSurfaceTemperatureC}°C` : '28.5°C')}
           </div>
-          <p className="text-[10px] text-slate-500">
+          <p className="text-[10px] text-muted-foreground">
             Chl-a: {zones[0]?.chlorophyllConcentrationMgM3 ? `${zones[0].chlorophyllConcentrationMgM3} mg/m³` : (oceanData?.data?.chlorophyllMgM3 ? `${oceanData.data.chlorophyllMgM3} mg/m³` : '1.35 mg/m³')}
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-2xl bg-surface border border-border space-y-1 shadow-sm">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Sea State Safety at Zone
           </span>
-          <div className="text-2xl font-black text-amber-400">
+          <div className="text-2xl font-black text-warning">
             {oceanData?.data?.significantWaveHeightM || 1.8} m
           </div>
-          <p className="text-[10px] text-slate-500">Wind: {weatherData?.data?.windSpeedKmh || 18.2} km/h</p>
+          <p className="text-[10px] text-muted-foreground">Wind: {weatherData?.data?.windSpeedKmh || 18.2} km/h</p>
         </div>
       </div>
 
       {/* ===== PFZ CARDS: HORIZONTAL CAROUSEL ===== */}
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-            <Fish className="w-4 h-4 text-emerald-400" />
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+            <Fish className="w-4 h-4 text-success" />
             <span>Potential Fishing Zones in {selectedSector.name}</span>
           </h2>
-          <span className="text-[11px] text-slate-400 font-mono">
+          <span className="text-[11px] text-muted-foreground font-mono">
             Composite Model: <strong>INCOIS / CMEMS</strong>
           </span>
         </div>
 
         {loading ? (
-          <div className="h-64 flex items-center justify-center bg-slate-900/40 rounded-2xl border border-slate-800">
+          <div className="h-64 flex items-center justify-center bg-surface-secondary/40 rounded-2xl border border-border">
             <LoadingSpinner message="Calculating satellite thermal fronts and pelagic zones..." />
           </div>
         ) : zones.length === 0 ? (
-          <div className="p-8 text-center bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-400 text-xs">
+          <div className="p-8 text-center bg-surface-secondary/40 rounded-2xl border border-border text-muted-foreground text-xs">
             No active thermal fronts detected within 50 km for current timestamp.
           </div>
         ) : (
@@ -261,75 +261,75 @@ export default function PFZPage() {
                            w-[90%]
                            sm:w-[calc((100%-1rem)/2)]
                            lg:w-[calc((100%-2rem)/3)]
-                           p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-4
-                           relative overflow-hidden shadow-lg hover:border-slate-700 transition"
+                           p-5 rounded-2xl bg-surface border border-border space-y-4
+                           relative overflow-hidden shadow-sm hover:border-border-subtle transition"
               >
-                <div className="flex flex-col gap-2 pb-3 border-b border-slate-800">
+                <div className="flex flex-col gap-2 pb-3 border-b border-border">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-semibold">
+                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-success-surface border border-success/30 text-success font-semibold">
                         {zone.confidenceRatingPct || 86}% Confidence
                       </span>
-                      <span className="text-xs text-slate-400 font-mono">{zone.depthRangeMeters || '30 - 50m'} depth</span>
+                      <span className="text-xs text-muted-foreground font-mono">{zone.depthRangeMeters || '30 - 50m'} depth</span>
                     </div>
-                    <h3 className="text-base font-bold text-white mt-1">{zone.name}</h3>
+                    <h3 className="text-base font-bold text-foreground mt-1">{zone.name}</h3>
                   </div>
 
                   <div>
-                    <div className="text-xs font-bold text-ocean-400 font-mono">
+                    <div className="text-xs font-bold text-primary font-mono">
                       {zone.distanceKm ?? 18.4} km &bull; {zone.bearingDegrees ?? 270}° {zone.bearingCardinal || 'W'}
                     </div>
-                    <div className="text-[10px] text-slate-500">From {selectedSector.name} baseline</div>
+                    <div className="text-[10px] text-muted-foreground">From {selectedSector.name} baseline</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400">Sea Surface Temp</span>
-                    <div className="font-bold text-slate-200 mt-0.5">
+                  <div className="p-2.5 rounded-xl bg-surface-secondary border border-border">
+                    <span className="text-[10px] text-muted-foreground">Sea Surface Temp</span>
+                    <div className="font-bold text-foreground mt-0.5">
                       {zone.seaSurfaceTempC ? `${zone.seaSurfaceTempC}°C` : (oceanData?.data?.seaSurfaceTemperatureC ? `${oceanData.data.seaSurfaceTemperatureC}°C` : '28.5°C')}
                     </div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400">Chlorophyll-a</span>
-                    <div className="font-bold text-tealAccent-400 mt-0.5">
+                  <div className="p-2.5 rounded-xl bg-surface-secondary border border-border">
+                    <span className="text-[10px] text-muted-foreground">Chlorophyll-a</span>
+                    <div className="font-bold text-accent mt-0.5">
                       {zone.chlorophyllConcentrationMgM3 ? `${zone.chlorophyllConcentrationMgM3} mg/m³` : (oceanData?.data?.chlorophyllMgM3 ? `${oceanData.data.chlorophyllMgM3} mg/m³` : '1.35 mg/m³')}
                     </div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400">Thermal Gradient</span>
-                    <div className="font-bold text-indigo-400 mt-0.5">
+                  <div className="p-2.5 rounded-xl bg-surface-secondary border border-border">
+                    <span className="text-[10px] text-muted-foreground">Thermal Gradient</span>
+                    <div className="font-bold text-primary mt-0.5">
                       {zone.thermalGradientCPerKm ? `${zone.thermalGradientCPerKm}°C / km` : '0.12°C / km'}
                     </div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400">Validity Window</span>
-                    <div className="font-bold text-slate-300 mt-0.5">
+                  <div className="p-2.5 rounded-xl bg-surface-secondary border border-border">
+                    <span className="text-[10px] text-muted-foreground">Validity Window</span>
+                    <div className="font-bold text-foreground mt-0.5">
                       {zone.validityWindow || (zone.validUntil ? `Valid until ${new Date(zone.validUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : 'Active 48h Window')}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-xs font-semibold text-slate-300">
+                  <span className="text-xs font-semibold text-foreground">
                     Target Pelagic Assemblage:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {(zone.targetSpecies || ['Indian Mackerel', 'Carangids', 'Seer Fish']).map((sp, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs flex items-center gap-1.5 font-medium"
+                        className="px-2.5 py-1 rounded-lg bg-surface-secondary border border-border text-foreground text-xs flex items-center gap-1.5 font-medium"
                       >
-                        <Fish className="w-3 h-3 text-ocean-400" />
+                        <Fish className="w-3 h-3 text-primary" />
                         <span>{sp}</span>
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+                <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-tealAccent-400 shrink-0" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-accent shrink-0" />
                     <span>Decision Support: Potentially Favourable Zone (No catch guarantee)</span>
                   </span>
                 </div>
@@ -342,8 +342,8 @@ export default function PFZPage() {
       {/* ===== FULL-WIDTH MAP ===== */}
       <section className="space-y-4 w-full">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-            <Layers className="w-4 h-4 text-ocean-400" />
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+            <Layers className="w-4 h-4 text-primary" />
             <span>Geospatial PFZ Boundary Preview</span>
           </h2>
           <StaleBadge
@@ -365,9 +365,9 @@ export default function PFZPage() {
       </section>
 
       {/* ===== DISCLAIMER (below map) ===== */}
-      <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2">
-        <div className="flex items-center gap-2 text-slate-200 font-semibold">
-          <Info className="w-4 h-4 text-ocean-400" />
+      <div className="p-4 rounded-xl bg-surface border border-border text-xs text-muted-foreground space-y-2 shadow-sm">
+        <div className="flex items-center gap-2 text-foreground font-semibold">
+          <Info className="w-4 h-4 text-primary" />
           <span>Scientific Advisory Disclaimer</span>
         </div>
         <p className="leading-relaxed">

@@ -36,7 +36,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -45,7 +45,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
       <aside
         className={clsx(
           // Mobile: full-screen overlay that slides in/out
-          'fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] border-r border-slate-800/80 bg-slate-950 flex flex-col p-4 transition-transform duration-200 ease-in-out',
+          'fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] border-r border-border bg-surface flex flex-col p-4 transition-transform duration-200 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           // Desktop: sticky in the layout column, full available height
           'md:static md:translate-x-0 md:w-64 md:max-w-none md:h-full md:shrink-0 md:flex md:flex-col'
@@ -55,12 +55,12 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         <div className="flex-1 flex flex-col overflow-y-auto min-h-0 gap-6">
           {/* Mobile close button row */}
           <div className="flex items-center justify-between px-3 md:hidden pt-1">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
               Navigation
             </span>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+              className="p-1.5 rounded-lg bg-surface-secondary border border-border text-foreground hover:bg-surface-tertiary"
               aria-label="Close navigation menu"
             >
               <X className="w-4 h-4" />
@@ -68,7 +68,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           </div>
 
           <div>
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 px-3 hidden md:block">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground px-3 hidden md:block">
               Marine Operations
             </span>
             <nav className="mt-2 space-y-1">
@@ -82,12 +82,12 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                   }}
                   className={({ isActive }) =>
                     clsx(
-                      'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                      'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                       isActive && item.ready
-                        ? 'bg-ocean-950/80 text-ocean-300 border border-ocean-800/60'
+                        ? 'bg-primary/10 text-primary border border-primary/25 font-semibold shadow-sm'
                         : item.ready
-                        ? 'text-slate-300 hover:bg-slate-900 hover:text-white'
-                        : 'text-slate-500 cursor-not-allowed opacity-75'
+                        ? 'text-muted-foreground hover:bg-surface-secondary hover:text-foreground'
+                        : 'text-muted-foreground/50 cursor-not-allowed opacity-60'
                     )
                   }
                 >
@@ -100,7 +100,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                       availability={ROUTE_AVAILABILITY[item.path] || 'online'}
                     />
                     {item.badge && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-secondary border border-border text-muted-foreground">
                         {item.badge}
                       </span>
                     )}
@@ -113,12 +113,12 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
 
         {/* Pinned footer — always visible at bottom of sidebar */}
         <div className="flex-shrink-0 pt-4">
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Radio className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-              <span className="text-xs font-semibold text-slate-300">System Monitoring</span>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border">
+            <div className="flex items-center gap-2 mb-1">
+              <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <span className="text-xs font-semibold text-foreground">Mission Monitoring</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               {isAuthenticated ? `Operator: ${user?.name || 'Authorized'}` : 'Audit logging active.'}
             </p>
           </div>
@@ -127,4 +127,3 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
     </>
   );
 }
-

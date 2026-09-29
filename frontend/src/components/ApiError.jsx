@@ -19,16 +19,16 @@ export default function ApiError({ error, onRetry, className = '' }) {
     return (
       <div
         role="alert"
-        className={`rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-300 ${className}`}
+        className={`rounded-xl border border-warning/40 bg-warning-surface px-3 py-2 text-xs text-warning ${className}`}
       >
         <div className="font-semibold mb-0.5">You're offline</div>
-        <div className="text-amber-200/80 leading-relaxed">
+        <div className="text-muted-foreground leading-relaxed">
           This action needs a live connection. Your page stays as it is — try again when you're back online.
         </div>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="mt-2 text-[11px] font-medium underline underline-offset-2 hover:text-amber-100"
+            className="mt-2 text-[11px] font-medium underline underline-offset-2 hover:opacity-80"
           >
             Retry now
           </button>
@@ -40,16 +40,16 @@ export default function ApiError({ error, onRetry, className = '' }) {
   return (
     <div
       role="alert"
-      className={`rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300 ${className}`}
+      className={`rounded-xl border border-danger/40 bg-danger-surface px-3 py-2 text-xs text-danger ${className}`}
     >
       <div className="font-semibold mb-0.5">Something went wrong</div>
-      <div className="text-rose-200/80 leading-relaxed">
+      <div className="text-muted-foreground leading-relaxed">
         {error.message || 'Unexpected error.'}
       </div>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="mt-2 text-[11px] font-medium underline underline-offset-2 hover:text-rose-100"
+          className="mt-2 text-[11px] font-medium underline underline-offset-2 hover:opacity-80"
         >
           Retry
         </button>
